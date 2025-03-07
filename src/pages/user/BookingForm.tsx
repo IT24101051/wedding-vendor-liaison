@@ -19,6 +19,8 @@ const BookingForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addBooking } = useBookings();
+  const { user } = useAuth();
   
   // Form state
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -30,6 +32,16 @@ const BookingForm = () => {
   const [specialRequests, setSpecialRequests] = useState("");
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fill in form with user data if available
+  useEffect(() => {
+    if (user) {
+      const [first, ...rest] = user.name.split(' ');
+      setFirstName(first || '');
+      setLastName(rest.join(' ') || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
   
   // Mock vendor data
   const vendor = {
@@ -88,16 +100,37 @@ const BookingForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Create booking
+    const selectedServiceDetails = vendor.services.find(s => s.id === service);
+    const price = parseInt(selectedServiceDetails?.price.replace(/[^0-9]/g, '') || '0');
+    
+    const newBooking = {
+      userId: user?.id || 'user1',
+      userName: `${firstName} ${lastName}`,
+      vendorId: vendor.id.toString(),
+      vendorName: vendor.name,
+      serviceName: selectedServiceDetails?.name || '',
+      serviceDate: date ? format(date, 'yyyy-MM-dd') : '',
+      eventType: 'Wedding',
+      amount: price,
+      status: 'pending' as const,
+      paymentStatus: 'pending' as const,
+      notes: specialRequests
+    };
+    
+    // Add booking and redirect to payment
+    const booking = addBooking(newBooking);
+    
     setTimeout(() => {
       setIsSubmitting(false);
       
       toast({
         title: "Booking submitted successfully!",
-        description: "The vendor will contact you shortly to confirm your booking.",
+        description: "You can now proceed to payment.",
       });
       
-      navigate("/user/bookings");
+      // Redirect to payment page
+      navigate(`/user/payment/${booking.id}`);
     }, 1500);
   };
   

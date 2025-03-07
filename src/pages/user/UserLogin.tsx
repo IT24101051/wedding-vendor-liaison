@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,14 +17,18 @@ const UserLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isAuthenticated } = useAuth();
+
+  // Check if the user was directed from a payment page
+  const from = location.state?.from?.pathname || "/user/payment/booking1";
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated('user')) {
-      navigate('/user');
+      navigate(from);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +39,7 @@ const UserLogin = () => {
     
     setIsLoading(false);
     if (success) {
-      navigate("/user");
+      navigate(from);
     } else {
       setError("Invalid email or password. Try client@example.com / password");
     }

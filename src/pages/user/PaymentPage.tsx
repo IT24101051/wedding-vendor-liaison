@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import UserLayout from '@/components/layouts/UserLayout';
 import PaymentGateway from '@/components/payment/PaymentGateway';
+import VendorMessaging from '@/components/messaging/VendorMessaging';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBookings } from '@/contexts/BookingContext';
 
 const PaymentPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { getBookingById } = useBookings();
   
-  // Mock booking details
-  const bookingDetails = {
-    id: id || '123',
+  // Get actual booking details if available
+  const booking = getBookingById(id || 'booking1');
+  
+  // Use real booking data if available, otherwise use mock data
+  const bookingDetails = booking || {
+    id: id || 'booking1',
     vendorName: 'Elegant Moments Photography',
+    vendorId: 'vendor1',
     serviceName: 'Premium Wedding Photography',
     date: 'October 15, 2023',
     amount: 2500,
@@ -40,7 +48,7 @@ const PaymentPage = () => {
             </CardHeader>
             <CardContent className="text-center">
               <p className="mb-6">You need to be logged in to complete your payment.</p>
-              <Link to="/user/login">
+              <Link to="/user/login" state={{ from: `/user/payment/${id}` }}>
                 <Button className="bg-wedding-navy">
                   <LogIn className="mr-2 h-4 w-4" /> Sign In
                 </Button>
@@ -89,6 +97,13 @@ const PaymentPage = () => {
                   <span className="text-2xl font-bold text-wedding-navy">${bookingDetails.amount}</span>
                 </div>
               </div>
+              
+              <div className="mt-6">
+                <VendorMessaging 
+                  vendorId={booking?.vendorId || 'vendor1'} 
+                  vendorName={booking?.vendorName || 'Elegant Moments Photography'} 
+                />
+              </div>
             </div>
           </div>
           
@@ -96,6 +111,9 @@ const PaymentPage = () => {
             <PaymentGateway 
               amount={bookingDetails.amount} 
               description={`Payment for ${bookingDetails.serviceName}`}
+              vendorName={bookingDetails.vendorName}
+              serviceName={bookingDetails.serviceName}
+              bookingId={bookingDetails.id}
               onSuccess={handlePaymentSuccess}
               onCancel={handleCancel}
             />

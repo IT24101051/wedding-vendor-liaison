@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,14 +17,18 @@ const VendorLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isAuthenticated } = useAuth();
+
+  // Get the location the user was trying to access
+  const from = location.state?.from?.pathname || "/vendor/dashboard";
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated('vendor')) {
-      navigate('/vendor/dashboard');
+      navigate(from);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +39,7 @@ const VendorLogin = () => {
     
     setIsLoading(false);
     if (success) {
-      navigate("/vendor/dashboard");
+      navigate(from);
     } else {
       setError("Invalid email or password. Try vendor@example.com / password");
     }

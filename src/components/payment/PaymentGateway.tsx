@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,10 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreditCard, CheckCircle, Ticket } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import ReceiptGenerator from './ReceiptGenerator';
+import { useAuth } from '@/contexts/AuthContext';
 
 type PaymentGatewayProps = {
   amount: number;
   description: string;
+  vendorName: string;
+  serviceName: string;
+  bookingId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 };
@@ -24,7 +28,7 @@ const PROMOCODES = {
   'SUMMER2023': { discount: 0.15, description: '15% summer discount' }
 };
 
-const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGatewayProps) => {
+const PaymentGateway = ({ amount, description, vendorName, serviceName, bookingId, onSuccess, onCancel }: PaymentGatewayProps) => {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
@@ -36,8 +40,10 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [promoError, setPromoError] = useState('');
+  const [showReceipt, setShowReceipt] = useState(false);
   
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const formatCardNumber = (value: string) => {
     // Remove all non-digit characters
@@ -111,11 +117,39 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
         description: `Your payment of $${finalAmount.toFixed(2)} has been processed.`,
       });
       
-      if (onSuccess) {
-        setTimeout(onSuccess, 1500);
-      }
+      // Don't navigate yet, show the receipt first
+      setShowReceipt(true);
     }, 2000);
   };
+
+  const handleContinueAfterReceipt = () => {
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
+
+  if (showReceipt) {
+    return (
+      <div className="space-y-6">
+        <ReceiptGenerator 
+          paymentId={bookingId}
+          customerName={user?.name || "Customer"}
+          vendorName={vendorName}
+          serviceName={serviceName}
+          amount={amount}
+          date={new Date().toISOString()}
+          discountAmount={discountAmount}
+          promoCode={appliedPromo || undefined}
+        />
+        
+        <div className="flex justify-center">
+          <Button className="mt-4 bg-wedding-gold text-white" onClick={handleContinueAfterReceipt}>
+            Continue to My Bookings
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (completed) {
     return (
@@ -132,8 +166,8 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
                 <p className="text-sm mt-2">Promocode {appliedPromo} applied: You saved ${discountAmount.toFixed(2)}</p>
               )}
             </CardDescription>
-            <Button className="mt-4 bg-wedding-navy" onClick={onSuccess}>
-              Continue
+            <Button className="mt-4 bg-wedding-navy" onClick={() => setShowReceipt(true)}>
+              View Receipt
             </Button>
           </div>
         </CardContent>
