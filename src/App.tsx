@@ -32,6 +32,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 // Shared Pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,31 +51,73 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Landing Page */}
+            {/* Landing Page - Accessible without login */}
             <Route path="/" element={<Index />} />
-            
-            {/* User Interface Routes */}
             <Route path="/user/login" element={<UserLogin />} />
+            <Route path="/vendor/login" element={<VendorLogin />} />
+            <Route path="/vendor/register" element={<VendorRegister />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            
+            {/* Public user routes - Accessible without login */}
             <Route path="/user" element={<UserHome />} />
             <Route path="/user/vendors" element={<VendorList />} />
             <Route path="/user/vendors/:id" element={<VendorDetails />} />
-            <Route path="/user/book/:id" element={<BookingForm />} />
-            <Route path="/user/bookings" element={<UserBookings />} />
-            <Route path="/user/payment/:id" element={<PaymentPage />} />
+            
+            {/* Protected user routes - Require login */}
+            <Route path="/user/book/:id" element={
+              <ProtectedRoute requiredType="user">
+                <BookingForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/user/bookings" element={
+              <ProtectedRoute requiredType="user">
+                <UserBookings />
+              </ProtectedRoute>
+            } />
+            <Route path="/user/payment/:id" element={
+              <ProtectedRoute requiredType="user">
+                <PaymentPage />
+              </ProtectedRoute>
+            } />
             
             {/* Vendor Interface Routes */}
-            <Route path="/vendor/register" element={<VendorRegister />} />
-            <Route path="/vendor/login" element={<VendorLogin />} />
-            <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-            <Route path="/vendor/profile" element={<VendorProfile />} />
-            <Route path="/vendor/services" element={<VendorServices />} />
-            <Route path="/vendor/bookings" element={<VendorBookings />} />
+            <Route path="/vendor/dashboard" element={
+              <ProtectedRoute requiredType="vendor">
+                <VendorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendor/profile" element={
+              <ProtectedRoute requiredType="vendor">
+                <VendorProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendor/services" element={
+              <ProtectedRoute requiredType="vendor">
+                <VendorServices />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendor/bookings" element={
+              <ProtectedRoute requiredType="vendor">
+                <VendorBookings />
+              </ProtectedRoute>
+            } />
             
             {/* Admin Interface Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/vendors" element={<AdminVendors />} />
-            <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute requiredType="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/vendors" element={
+              <ProtectedRoute requiredType="admin">
+                <AdminVendors />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/bookings" element={
+              <ProtectedRoute requiredType="admin">
+                <AdminBookings />
+              </ProtectedRoute>
+            } />
             
             {/* Catch-all route for 404 */}
             <Route path="*" element={<NotFound />} />

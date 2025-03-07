@@ -1,14 +1,16 @@
-
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import UserLayout from '@/components/layouts/UserLayout';
 import PaymentGateway from '@/components/payment/PaymentGateway';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, LogIn } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PaymentPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { isAuthenticated } = useAuth();
   
   // Mock booking details
   const bookingDetails = {
@@ -26,6 +28,29 @@ const PaymentPage = () => {
   const handleCancel = () => {
     navigate(-1);
   };
+
+  // The ProtectedRoute component now handles this, but keeping it for additional safety
+  if (!isAuthenticated('user')) {
+    return (
+      <UserLayout>
+        <div className="container mx-auto px-4 py-12">
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl">Login Required</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="mb-6">You need to be logged in to complete your payment.</p>
+              <Link to="/user/login">
+                <Button className="bg-wedding-navy">
+                  <LogIn className="mr-2 h-4 w-4" /> Sign In
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </UserLayout>
+    );
+  }
 
   return (
     <UserLayout>

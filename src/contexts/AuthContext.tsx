@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { BookingProvider } from './BookingContext';
 
 // Define user types
 export type UserType = 'user' | 'vendor' | 'admin';
@@ -118,7 +119,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated }}>
-      {children}
+      <BookingProvider>
+        {children}
+      </BookingProvider>
     </AuthContext.Provider>
   );
 };
