@@ -11,6 +11,7 @@ import VendorList from "./pages/user/VendorList";
 import VendorDetails from "./pages/user/VendorDetails";
 import BookingForm from "./pages/user/BookingForm";
 import UserBookings from "./pages/user/UserBookings";
+import PaymentPage from "./pages/user/PaymentPage";
 
 // Vendor Interface
 import VendorDashboard from "./pages/vendor/VendorDashboard";
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/user/vendors/:id" element={<VendorDetails />} />
           <Route path="/user/book/:id" element={<BookingForm />} />
           <Route path="/user/bookings" element={<UserBookings />} />
+          <Route path="/user/payment/:id" element={<PaymentPage />} />
           
           {/* Vendor Interface Routes */}
           <Route path="/vendor/register" element={<VendorRegister />} />
