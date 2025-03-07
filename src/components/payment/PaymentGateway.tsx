@@ -6,14 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, CheckCircle } from 'lucide-react';
+import { CreditCard, CheckCircle, Ticket } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type PaymentGatewayProps = {
   amount: number;
   description: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+};
+
+// Mock promocodes for demonstration
+const PROMOCODES = {
+  'WELCOME10': { discount: 0.1, description: '10% off your first booking' },
+  'WEDDING25': { discount: 0.25, description: '25% off wedding packages' },
+  'SUMMER2023': { discount: 0.15, description: '15% summer discount' }
 };
 
 const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGatewayProps) => {
@@ -24,6 +32,10 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
   const [cvv, setCvv] = useState('');
   const [processing, setProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [promoError, setPromoError] = useState('');
   
   const { toast } = useToast();
 
@@ -52,6 +64,39 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
     setExpiryDate(value);
   };
 
+  const applyPromoCode = () => {
+    setPromoError('');
+    
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promocode');
+      return;
+    }
+    
+    const code = promoCode.trim().toUpperCase();
+    if (PROMOCODES[code as keyof typeof PROMOCODES]) {
+      const discount = PROMOCODES[code as keyof typeof PROMOCODES].discount;
+      const discountValue = amount * discount;
+      
+      setAppliedPromo(code);
+      setDiscountAmount(discountValue);
+      
+      toast({
+        title: "Promocode Applied",
+        description: PROMOCODES[code as keyof typeof PROMOCODES].description,
+      });
+    } else {
+      setPromoError('Invalid promocode');
+    }
+  };
+
+  const removePromoCode = () => {
+    setAppliedPromo(null);
+    setDiscountAmount(0);
+    setPromoCode('');
+  };
+
+  const finalAmount = amount - discountAmount;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
@@ -63,7 +108,7 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
       
       toast({
         title: "Payment Successful",
-        description: `Your payment of $${amount.toFixed(2)} has been processed.`,
+        description: `Your payment of $${finalAmount.toFixed(2)} has been processed.`,
       });
       
       if (onSuccess) {
@@ -82,7 +127,10 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
             </div>
             <CardTitle className="text-2xl mb-2">Payment Successful!</CardTitle>
             <CardDescription className="mb-4">
-              Your payment of ${amount.toFixed(2)} has been processed successfully.
+              Your payment of ${finalAmount.toFixed(2)} has been processed successfully.
+              {appliedPromo && (
+                <p className="text-sm mt-2">Promocode {appliedPromo} applied: You saved ${discountAmount.toFixed(2)}</p>
+              )}
             </CardDescription>
             <Button className="mt-4 bg-wedding-navy" onClick={onSuccess}>
               Continue
@@ -98,9 +146,53 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
       <CardHeader>
         <CardTitle>Payment</CardTitle>
         <CardDescription>{description}</CardDescription>
-        <div className="mt-2 text-2xl font-bold text-wedding-navy">${amount.toFixed(2)}</div>
+        <div className="mt-2 flex flex-col">
+          <div className="text-2xl font-bold text-wedding-navy">${finalAmount.toFixed(2)}</div>
+          {discountAmount > 0 && (
+            <div className="text-sm text-green-600 flex items-center mt-1">
+              <Ticket className="h-4 w-4 mr-1" />
+              <span>You saved ${discountAmount.toFixed(2)} with code {appliedPromo}</span>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
+        {/* Promocode Section */}
+        <div className="mb-6 border-b pb-4">
+          <Label htmlFor="promocode" className="mb-2 block">Promocode</Label>
+          <div className="flex space-x-2">
+            <Input
+              id="promocode"
+              placeholder="Enter promocode"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              disabled={!!appliedPromo}
+              className="flex-1"
+            />
+            {appliedPromo ? (
+              <Button 
+                onClick={removePromoCode}
+                variant="outline"
+              >
+                Remove
+              </Button>
+            ) : (
+              <Button 
+                onClick={applyPromoCode}
+                disabled={!promoCode.trim()}
+                className="bg-wedding-gold hover:bg-wedding-gold/90"
+              >
+                Apply
+              </Button>
+            )}
+          </div>
+          {promoError && (
+            <Alert variant="destructive" className="mt-2 py-2">
+              <AlertDescription>{promoError}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+
         <Tabs defaultValue={paymentMethod} onValueChange={setPaymentMethod} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="card">Credit Card</TabsTrigger>
@@ -167,7 +259,7 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
                 className="w-full bg-wedding-gold hover:bg-wedding-gold/90"
                 disabled={processing}
               >
-                {processing ? "Processing..." : "Pay Now"}
+                {processing ? "Processing..." : `Pay $${finalAmount.toFixed(2)}`}
               </Button>
             </form>
           </TabsContent>
@@ -180,7 +272,7 @@ const PaymentGateway = ({ amount, description, onSuccess, onCancel }: PaymentGat
                 disabled={processing}
                 onClick={handleSubmit}
               >
-                {processing ? "Connecting..." : "Pay with PayPal"}
+                {processing ? "Connecting..." : `Pay $${finalAmount.toFixed(2)} with PayPal`}
               </Button>
             </div>
           </TabsContent>
