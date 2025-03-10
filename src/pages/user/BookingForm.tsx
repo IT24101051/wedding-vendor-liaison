@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import UserLayout from "@/components/layouts/UserLayout";
@@ -104,7 +103,7 @@ const BookingForm = () => {
     
     // Create booking
     const selectedServiceDetails = vendor.services.find(s => s.id === service);
-    const price = parseInt(selectedServiceDetails?.price.replace(/[^0-9]/g, '') || '0');
+    const price = selectedServiceDetails ? parseInt(selectedServiceDetails.price.replace(/[^0-9]/g, '') || '0') : 0;
     
     const newBooking = {
       userId: user?.id || 'user1',
@@ -120,20 +119,30 @@ const BookingForm = () => {
       notes: specialRequests
     };
     
-    // Add booking and redirect to payment
-    const booking = addBooking(newBooking);
-    
-    setTimeout(() => {
+    try {
+      // Add booking and redirect to payment
+      const booking = addBooking(newBooking);
+      
+      setTimeout(() => {
+        setIsSubmitting(false);
+        
+        toast({
+          title: "Booking submitted successfully!",
+          description: "You can now proceed to payment.",
+        });
+        
+        // Redirect to payment page with the booking ID
+        navigate(`/user/payment/${booking.id}`);
+      }, 1500);
+    } catch (error) {
+      console.error("Error creating booking:", error);
       setIsSubmitting(false);
-      
       toast({
-        title: "Booking submitted successfully!",
-        description: "You can now proceed to payment.",
+        title: "Error creating booking",
+        description: "There was an error creating your booking. Please try again.",
+        variant: "destructive"
       });
-      
-      // Redirect to payment page
-      navigate(`/user/payment/${booking.id}`);
-    }, 1500);
+    }
   };
   
   const selectedService = vendor.services.find(s => s.id === service);

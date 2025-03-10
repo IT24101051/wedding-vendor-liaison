@@ -107,6 +107,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     if (bookings.length > 0) {
       localStorage.setItem('wedding_app_bookings', JSON.stringify(bookings));
+      console.log('Updated bookings in localStorage:', bookings);
     }
   }, [bookings]);
 
@@ -120,7 +121,12 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updatedAt: now
     };
     
-    setBookings(prev => [...prev, bookingWithId]);
+    setBookings(prev => {
+      const updatedBookings = [...prev, bookingWithId];
+      console.log('Added new booking:', bookingWithId);
+      console.log('Updated bookings state:', updatedBookings);
+      return updatedBookings;
+    });
     
     toast({
       title: "Booking Created",
@@ -132,8 +138,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Update an existing booking
   const updateBooking = (id: string, updates: Partial<Booking>) => {
-    setBookings(prev => 
-      prev.map(booking => 
+    setBookings(prev => {
+      const updatedBookings = prev.map(booking => 
         booking.id === id 
           ? { 
               ...booking, 
@@ -141,8 +147,11 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
               updatedAt: new Date().toISOString() 
             } 
           : booking
-      )
-    );
+      );
+      console.log(`Updated booking ${id}:`, updates);
+      console.log('Updated bookings state:', updatedBookings);
+      return updatedBookings;
+    });
     
     toast({
       title: "Booking Updated",
@@ -157,7 +166,9 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Get bookings by vendor ID
   const getBookingsByVendorId = (vendorId: string) => {
-    return bookings.filter(booking => booking.vendorId === vendorId);
+    const filtered = bookings.filter(booking => booking.vendorId === vendorId);
+    console.log(`Fetching bookings for vendor ${vendorId}:`, filtered);
+    return filtered;
   };
 
   // Get a booking by ID

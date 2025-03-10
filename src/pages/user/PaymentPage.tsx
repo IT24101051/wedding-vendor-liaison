@@ -14,7 +14,7 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { isAuthenticated, user } = useAuth();
-  const { getBookingById } = useBookings();
+  const { getBookingById, updateBooking } = useBookings();
   
   // Get actual booking details if available
   const booking = getBookingById(id || 'booking1');
@@ -33,6 +33,10 @@ const PaymentPage = () => {
   const displayDate = booking ? booking.serviceDate : bookingDetails.date;
 
   const handlePaymentSuccess = () => {
+    if (booking) {
+      // Update the booking payment status when payment is successful
+      updateBooking(booking.id, { paymentStatus: 'paid' });
+    }
     navigate('/user/bookings');
   };
 
