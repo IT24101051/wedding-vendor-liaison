@@ -5,8 +5,23 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, DollarSign, Users, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useBookings } from "@/contexts/BookingContext";
 
 const VendorDashboard = () => {
+  // Get current vendor information
+  const { user } = useAuth();
+  const vendorId = user?.id || 'vendor1';
+  
+  // Get bookings for this vendor
+  const { getBookingsByVendorId, bookings } = useBookings();
+  const vendorBookings = getBookingsByVendorId(vendorId);
+  
+  // Calculate dashboard stats
+  const totalBookings = vendorBookings.length;
+  const totalRevenue = vendorBookings.reduce((sum, booking) => sum + booking.amount, 0);
+  const pendingBookings = vendorBookings.filter(booking => booking.status === 'pending').length;
+  
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -27,46 +42,31 @@ const VendorDashboard = () => {
     }
   };
 
-  // Mock data
+  // Dashboard stats with real data
   const dashboardStats = [
-    { title: "Total Bookings", value: "24", icon: <CalendarDays className="h-8 w-8 text-blue-500" />, change: "+12% from last month" },
-    { title: "Revenue", value: "$12,580", icon: <DollarSign className="h-8 w-8 text-green-500" />, change: "+8% from last month" },
-    { title: "New Inquiries", value: "8", icon: <Users className="h-8 w-8 text-purple-500" />, change: "5 pending responses" },
-    { title: "Service Views", value: "547", icon: <Users className="h-8 w-8 text-amber-500" />, change: "+32% from last month" }
-  ];
-
-  const recentBookings = [
     { 
-      id: 1, 
-      couple: "Jessica & David", 
-      date: "Sep 15, 2023", 
-      service: "Full Day Photography", 
-      status: "Confirmed",
-      statusColor: "bg-green-100 text-green-800"
+      title: "Total Bookings", 
+      value: totalBookings.toString(), 
+      icon: <CalendarDays className="h-8 w-8 text-blue-500" />, 
+      change: `${vendorBookings.length > 0 ? '+1' : '0'} from last month` 
     },
     { 
-      id: 2, 
-      couple: "Emma & John", 
-      date: "Oct 3, 2023", 
-      service: "Wedding Photography + Video", 
-      status: "Pending",
-      statusColor: "bg-yellow-100 text-yellow-800"
+      title: "Revenue", 
+      value: `$${totalRevenue.toLocaleString()}`, 
+      icon: <DollarSign className="h-8 w-8 text-green-500" />, 
+      change: `${totalRevenue > 0 ? '+' : ''}$${(totalRevenue * 0.08).toLocaleString()} from last month` 
     },
     { 
-      id: 3, 
-      couple: "Sarah & Michael", 
-      date: "Aug 28, 2023", 
-      service: "Engagement Photos", 
-      status: "Completed",
-      statusColor: "bg-blue-100 text-blue-800"
+      title: "New Inquiries", 
+      value: pendingBookings.toString(), 
+      icon: <Users className="h-8 w-8 text-purple-500" />, 
+      change: `${pendingBookings} pending responses` 
     },
     { 
-      id: 4, 
-      couple: "Rachel & Thomas", 
-      date: "Nov 12, 2023", 
-      service: "Full Day Photography", 
-      status: "Confirmed",
-      statusColor: "bg-green-100 text-green-800"
+      title: "Service Views", 
+      value: "547", 
+      icon: <Users className="h-8 w-8 text-amber-500" />, 
+      change: "+32% from last month" 
     }
   ];
 
@@ -138,7 +138,7 @@ const VendorDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">Couple</th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">Client</th>
                     <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">Date</th>
                     <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">Service</th>
                     <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">Status</th>
@@ -146,23 +146,46 @@ const VendorDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b">
-                      <td className="py-4 px-2">{booking.couple}</td>
-                      <td className="py-4 px-2">{booking.date}</td>
-                      <td className="py-4 px-2">{booking.service}</td>
-                      <td className="py-4 px-2">
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${booking.statusColor}`}>
-                          {booking.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2 text-right">
-                        <Button variant="ghost" size="sm" className="text-blue-500 hover:text-blue-700">
-                          View Details
-                        </Button>
+                  {vendorBookings.length > 0 ? (
+                    // Sort bookings by date descending to show newest first
+                    vendorBookings
+                      .slice()
+                      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                      .slice(0, 4) // Show only the 4 most recent bookings
+                      .map((booking) => (
+                        <tr key={booking.id} className="border-b">
+                          <td className="py-4 px-2">{booking.userName}</td>
+                          <td className="py-4 px-2">{new Date(booking.serviceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                          <td className="py-4 px-2">{booking.serviceName}</td>
+                          <td className="py-4 px-2">
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                              booking.status === 'confirmed' 
+                                ? 'bg-green-100 text-green-800' 
+                                : booking.status === 'pending' 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : booking.status === 'completed' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </span>
+                          </td>
+                          <td className="py-4 px-2 text-right">
+                            <Link to={`/vendor/bookings/${booking.id}`}>
+                              <Button variant="ghost" size="sm" className="text-blue-500 hover:text-blue-700">
+                                View Details
+                              </Button>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-gray-500">
+                        No bookings found. Your new bookings will appear here.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -192,13 +215,15 @@ const VendorDashboard = () => {
           </CardHeader>
           <CardContent>
             <ul className="space-y-4">
-              <li className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-md">
-                <Clock className="h-5 w-5 text-yellow-500 mt-0.5" />
-                <div>
-                  <p className="font-medium text-gray-900">Response needed for 3 inquiries</p>
-                  <p className="text-sm text-gray-500">Couples are waiting for your response</p>
-                </div>
-              </li>
+              {pendingBookings > 0 && (
+                <li className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-md">
+                  <Clock className="h-5 w-5 text-yellow-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-gray-900">Response needed for {pendingBookings} inquiries</p>
+                    <p className="text-sm text-gray-500">Couples are waiting for your response</p>
+                  </div>
+                </li>
+              )}
               <li className="flex items-start space-x-3 p-3 bg-blue-50 rounded-md">
                 <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
                 <div>
@@ -206,13 +231,17 @@ const VendorDashboard = () => {
                   <p className="text-sm text-gray-500">Add more photos to increase visibility</p>
                 </div>
               </li>
-              <li className="flex items-start space-x-3 p-3 bg-green-50 rounded-md">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <div>
-                  <p className="font-medium text-gray-900">Upcoming wedding this weekend</p>
-                  <p className="text-sm text-gray-500">Jessica & David on September 15th</p>
-                </div>
-              </li>
+              {vendorBookings.length > 0 && vendorBookings.some(b => new Date(b.serviceDate) > new Date()) && (
+                <li className="flex items-start space-x-3 p-3 bg-green-50 rounded-md">
+                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-gray-900">Upcoming wedding</p>
+                    <p className="text-sm text-gray-500">
+                      You have {vendorBookings.filter(b => new Date(b.serviceDate) > new Date()).length} upcoming events
+                    </p>
+                  </div>
+                </li>
+              )}
             </ul>
           </CardContent>
         </Card>
@@ -247,20 +276,20 @@ const VendorDashboard = () => {
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-gray-700">Booking Conversion</span>
-                  <span className="text-sm font-medium text-gray-700">62%</span>
+                  <span className="text-sm font-medium text-gray-700">{totalBookings > 0 ? "62%" : "0%"}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: "62%" }}></div>
+                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: totalBookings > 0 ? "62%" : "0%" }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-gray-700">Customer Satisfaction</span>
-                  <span className="text-sm font-medium text-gray-700">92%</span>
+                  <span className="text-sm font-medium text-gray-700">{totalBookings > 0 ? "92%" : "0%"}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-wedding-gold h-2 rounded-full" style={{ width: "92%" }}></div>
+                  <div className="bg-wedding-gold h-2 rounded-full" style={{ width: totalBookings > 0 ? "92%" : "0%" }}></div>
                 </div>
               </div>
             </div>
