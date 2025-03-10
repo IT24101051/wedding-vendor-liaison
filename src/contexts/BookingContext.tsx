@@ -22,7 +22,7 @@ export interface Booking {
 
 interface BookingContextType {
   bookings: Booking[];
-  addBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>) => Booking;
   updateBooking: (id: string, updates: Partial<Booking>) => void;
   getBookingsByUserId: (userId: string) => Booking[];
   getBookingsByVendorId: (vendorId: string) => Booking[];
@@ -111,7 +111,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [bookings]);
 
   // Add a new booking
-  const addBooking = (newBooking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addBooking = (newBooking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Booking => {
     const now = new Date().toISOString();
     const bookingWithId: Booking = {
       ...newBooking,

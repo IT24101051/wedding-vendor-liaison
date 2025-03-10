@@ -29,7 +29,7 @@ const PaymentPage = () => {
     amount: 2500,
   };
 
-  // Display date appropriately depending on the booking source
+  // Handle the date display based on whether we have a real booking or fallback data
   const displayDate = booking ? booking.serviceDate : bookingDetails.date;
 
   const handlePaymentSuccess = () => {
