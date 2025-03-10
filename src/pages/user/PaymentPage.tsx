@@ -29,6 +29,9 @@ const PaymentPage = () => {
     amount: 2500,
   };
 
+  // Display date appropriately depending on the booking source
+  const displayDate = booking ? booking.serviceDate : bookingDetails.date;
+
   const handlePaymentSuccess = () => {
     navigate('/user/bookings');
   };
@@ -90,7 +93,7 @@ const PaymentPage = () => {
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="text-gray-600">Date</span>
-                  <span className="font-medium">{bookingDetails.date}</span>
+                  <span className="font-medium">{displayDate}</span>
                 </div>
                 <div className="flex justify-between pt-2">
                   <span className="text-gray-800 font-semibold">Total Amount</span>

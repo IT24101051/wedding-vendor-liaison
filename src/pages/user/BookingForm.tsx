@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import UserLayout from "@/components/layouts/UserLayout";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { CalendarIcon, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { useBookings } from "@/contexts/BookingContext";
 
 const BookingForm = () => {
   const { id } = useParams();

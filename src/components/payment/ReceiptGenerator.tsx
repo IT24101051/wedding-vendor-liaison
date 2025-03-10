@@ -98,25 +98,27 @@ const ReceiptGenerator: React.FC<ReceiptProps> = ({
         </div>
       </CardContent>
 
-      <style jsx>{`
-        @media print {
-          body * {
-            visibility: hidden;
+      <style>
+        {`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #receipt, #receipt * {
+              visibility: visible;
+            }
+            #receipt {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
+            .print\\:hidden {
+              display: none !important;
+            }
           }
-          #receipt, #receipt * {
-            visibility: visible;
-          }
-          #receipt {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </Card>
   );
 };
