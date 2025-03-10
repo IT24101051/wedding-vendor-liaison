@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import UserLayout from '@/components/layouts/UserLayout';
@@ -24,7 +25,7 @@ const PaymentPage = () => {
     vendorName: 'Elegant Moments Photography',
     vendorId: 'vendor1',
     serviceName: 'Premium Wedding Photography',
-    serviceDate: '2023-10-15', // Changed from date to serviceDate to match Booking type
+    serviceDate: '2023-10-15', // Using serviceDate consistently
     amount: 2500,
   };
 

@@ -26,7 +26,10 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   };
 
   const handleLogout = () => {
+    // Properly call logout and ensure navigation happens after
+    console.log("Logging out vendor...");
     logout();
+    // Navigate after logout
     navigate('/vendor/login');
   };
 
