@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import UserLayout from '@/components/layouts/UserLayout';
 import PaymentGateway from '@/components/payment/PaymentGateway';
@@ -25,16 +24,15 @@ const PaymentPage = () => {
     vendorName: 'Elegant Moments Photography',
     vendorId: 'vendor1',
     serviceName: 'Premium Wedding Photography',
-    date: 'October 15, 2023',
+    serviceDate: '2023-10-15', // Changed from date to serviceDate to match Booking type
     amount: 2500,
   };
 
   // Handle the date display based on whether we have a real booking or fallback data
-  const displayDate = booking ? booking.serviceDate : bookingDetails.date;
+  const displayDate = booking ? booking.serviceDate : bookingDetails.serviceDate;
 
   const handlePaymentSuccess = () => {
     if (booking) {
-      // Update the booking payment status when payment is successful
       updateBooking(booking.id, { paymentStatus: 'paid' });
     }
     navigate('/user/bookings');
