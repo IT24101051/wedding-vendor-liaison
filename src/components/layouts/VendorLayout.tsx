@@ -1,7 +1,8 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Store,
   LayoutDashboard,
@@ -17,9 +18,16 @@ import {
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/vendor/login');
   };
 
   return (
@@ -68,7 +76,10 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
               >
                 Bookings
               </Link>
-              <Button className="bg-wedding-gold text-white hover:bg-wedding-gold/90">
+              <Button 
+                onClick={handleLogout}
+                className="bg-wedding-gold text-white hover:bg-wedding-gold/90"
+              >
                 <LogOut className="h-4 w-4 mr-2" /> Logout
               </Button>
             </nav>
@@ -129,7 +140,10 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
                 >
                   Bookings
                 </Link>
-                <Button className="bg-wedding-gold text-white hover:bg-wedding-gold/90 w-full">
+                <Button 
+                  onClick={handleLogout}
+                  className="bg-wedding-gold text-white hover:bg-wedding-gold/90 w-full"
+                >
                   <LogOut className="h-4 w-4 mr-2" /> Logout
                 </Button>
               </nav>
