@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useCallback } from "react";
 import VendorLayout from "@/components/layouts/VendorLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,23 +14,38 @@ const VendorDashboard = () => {
   const { user } = useAuth();
   const vendorId = user?.id || 'vendor1';
   
-  // Get bookings context and set up state
+  // Get bookings context
   const { bookings, getBookingsByVendorId } = useBookings();
-  const [vendorBookings, setVendorBookings] = useState(getBookingsByVendorId(vendorId));
+  
+  // Set up state for dashboard data
+  const [vendorBookings, setVendorBookings] = useState([]);
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [pendingBookings, setPendingBookings] = useState(0);
   
-  // Update dashboard data whenever bookings change
-  useEffect(() => {
+  // Create a memoized function to get vendor bookings
+  const updateDashboardData = useCallback(() => {
+    console.log("Updating dashboard data for vendor:", vendorId);
     const currentVendorBookings = getBookingsByVendorId(vendorId);
+    console.log("Current vendor bookings:", currentVendorBookings);
+    
     setVendorBookings(currentVendorBookings);
     setTotalBookings(currentVendorBookings.length);
     setTotalRevenue(currentVendorBookings.reduce((sum, booking) => sum + booking.amount, 0));
     setPendingBookings(currentVendorBookings.filter(booking => booking.status === 'pending').length);
-    
-    console.log("Vendor bookings updated:", currentVendorBookings);
-  }, [bookings, vendorId, getBookingsByVendorId]);
+  }, [vendorId, getBookingsByVendorId]);
+  
+  // Update dashboard data whenever bookings change
+  useEffect(() => {
+    console.log("Bookings changed, updating dashboard...");
+    updateDashboardData();
+  }, [bookings, updateDashboardData]);
+  
+  // Update dashboard data on initial load
+  useEffect(() => {
+    console.log("Initial dashboard load...");
+    updateDashboardData();
+  }, [updateDashboardData]);
   
   // Animation variants
   const containerVariants = {
