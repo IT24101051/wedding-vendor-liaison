@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import VendorLayout from "@/components/layouts/VendorLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,24 +13,23 @@ const VendorDashboard = () => {
   const { user } = useAuth();
   const vendorId = user?.id || 'vendor1';
   
-  // Get bookings for this vendor
-  const { getBookingsByVendorId, bookings } = useBookings();
-  const vendorBookings = getBookingsByVendorId(vendorId);
+  // Get bookings context and set up state
+  const { bookings, getBookingsByVendorId } = useBookings();
+  const [vendorBookings, setVendorBookings] = useState(getBookingsByVendorId(vendorId));
+  const [totalBookings, setTotalBookings] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [pendingBookings, setPendingBookings] = useState(0);
   
-  // Calculate dashboard stats
-  const totalBookings = vendorBookings.length;
-  const totalRevenue = vendorBookings.reduce((sum, booking) => sum + booking.amount, 0);
-  const pendingBookings = vendorBookings.filter(booking => booking.status === 'pending').length;
-  
-  // Log dashboard updates for debugging
+  // Update dashboard data whenever bookings change
   useEffect(() => {
-    console.log("Vendor dashboard updating with new data:", {
-      totalBookings,
-      totalRevenue,
-      pendingBookings,
-      vendorBookings
-    });
-  }, [bookings, totalBookings, totalRevenue, pendingBookings]);
+    const currentVendorBookings = getBookingsByVendorId(vendorId);
+    setVendorBookings(currentVendorBookings);
+    setTotalBookings(currentVendorBookings.length);
+    setTotalRevenue(currentVendorBookings.reduce((sum, booking) => sum + booking.amount, 0));
+    setPendingBookings(currentVendorBookings.filter(booking => booking.status === 'pending').length);
+    
+    console.log("Vendor bookings updated:", currentVendorBookings);
+  }, [bookings, vendorId, getBookingsByVendorId]);
   
   // Animation variants
   const containerVariants = {
