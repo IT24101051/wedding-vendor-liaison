@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import VendorLayout from "@/components/layouts/VendorLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,16 @@ const VendorDashboard = () => {
   const totalBookings = vendorBookings.length;
   const totalRevenue = vendorBookings.reduce((sum, booking) => sum + booking.amount, 0);
   const pendingBookings = vendorBookings.filter(booking => booking.status === 'pending').length;
+  
+  // Log dashboard updates for debugging
+  useEffect(() => {
+    console.log("Vendor dashboard updating with new data:", {
+      totalBookings,
+      totalRevenue,
+      pendingBookings,
+      vendorBookings
+    });
+  }, [bookings, totalBookings, totalRevenue, pendingBookings]);
   
   // Animation variants
   const containerVariants = {
