@@ -14,6 +14,9 @@ import BookingForm from "./pages/user/BookingForm";
 import UserBookings from "./pages/user/UserBookings";
 import PaymentPage from "./pages/user/PaymentPage";
 import UserLogin from "./pages/user/UserLogin";
+import PrivacyPolicy from "./pages/user/PrivacyPolicy";
+import ContactUs from "./pages/user/ContactUs";
+import HelpCenter from "./pages/user/HelpCenter";
 
 // Vendor Interface
 import VendorDashboard from "./pages/vendor/VendorDashboard";
@@ -62,6 +65,9 @@ const App = () => (
             <Route path="/user" element={<UserHome />} />
             <Route path="/user/vendors" element={<VendorList />} />
             <Route path="/user/vendors/:id" element={<VendorDetails />} />
+            <Route path="/user/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/user/contact-us" element={<ContactUs />} />
+            <Route path="/user/help-center" element={<HelpCenter />} />
             
             {/* Protected user routes - Require login */}
             <Route path="/user/book/:id" element={

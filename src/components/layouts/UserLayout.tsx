@@ -152,9 +152,9 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
               <div>
                 <h3 className="text-lg font-medium mb-4">Support</h3>
                 <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-300 hover:text-white">Help Center</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white">Contact Us</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white">Privacy Policy</a></li>
+                  <li><Link to="/user/help-center" className="text-gray-300 hover:text-white">Help Center</Link></li>
+                  <li><Link to="/user/contact-us" className="text-gray-300 hover:text-white">Contact Us</Link></li>
+                  <li><Link to="/user/privacy-policy" className="text-gray-300 hover:text-white">Privacy Policy</Link></li>
                 </ul>
               </div>
             </div>
