@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,10 +19,8 @@ const UserLogin = () => {
   const location = useLocation();
   const { login, isAuthenticated } = useAuth();
 
-  // Check if the user was directed from a payment page
   const from = location.state?.from?.pathname || "/user/payment/booking1";
 
-  // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated('user')) {
       navigate(from);
@@ -121,7 +118,7 @@ const UserLogin = () => {
             <div className="mt-4 text-center text-sm">
               <p>
                 Don't have an account?{" "}
-                <Link to="#" className="text-wedding-navy font-semibold hover:underline">
+                <Link to="/user/register" className="text-wedding-navy font-semibold hover:underline">
                   Register now
                 </Link>
               </p>
