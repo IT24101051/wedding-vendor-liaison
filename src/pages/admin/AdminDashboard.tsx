@@ -16,8 +16,12 @@ import {
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import PriceCalculator from "@/components/admin/PriceCalculator";
+import { useBookings } from "@/contexts/BookingContext";
 
 const AdminDashboard = () => {
+  // Get bookings data
+  const { bookings } = useBookings();
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -38,14 +42,41 @@ const AdminDashboard = () => {
     }
   };
 
-  // Mock data
+  // Calculate booking statistics
+  const totalBookings = bookings.length;
+  const confirmedBookings = bookings.filter(booking => booking.status === 'confirmed').length;
+  const pendingBookings = bookings.filter(booking => booking.status === 'pending').length;
+  const completedBookings = bookings.filter(booking => booking.status === 'completed').length;
+  
+  // Calculate revenue from confirmed and completed bookings
+  const totalRevenue = bookings
+    .filter(booking => booking.paymentStatus === 'paid')
+    .reduce((total, booking) => total + booking.amount, 0);
+
+  // Updated dashboard stats with real data
   const dashboardStats = [
     { title: "Total Vendors", value: "124", icon: <Store className="h-8 w-8 text-indigo-500" />, change: "+8 this month" },
-    { title: "Pending Approvals", value: "17", icon: <CheckCircle className="h-8 w-8 text-yellow-500" />, change: "12 new this week" },
-    { title: "Total Bookings", value: "1,248", icon: <Calendar className="h-8 w-8 text-green-500" />, change: "+15% from last month" },
-    { title: "Active Users", value: "4,628", icon: <UserCheck className="h-8 w-8 text-blue-500" />, change: "+324 this month" }
+    { 
+      title: "Total Bookings", 
+      value: totalBookings.toString(), 
+      icon: <Calendar className="h-8 w-8 text-green-500" />, 
+      change: `${pendingBookings} pending approval` 
+    },
+    { 
+      title: "Active Users", 
+      value: "4,628", 
+      icon: <UserCheck className="h-8 w-8 text-blue-500" />, 
+      change: "+324 this month" 
+    },
+    { 
+      title: "Completed Bookings", 
+      value: completedBookings.toString(), 
+      icon: <CheckCircle className="h-8 w-8 text-yellow-500" />, 
+      change: `${confirmedBookings} confirmed` 
+    }
   ];
 
+  // Mock data for pending vendors
   const pendingVendors = [
     { 
       id: 1, 
@@ -301,7 +332,7 @@ const AdminDashboard = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-500">Processing Fee Revenue</p>
                     <div className="flex items-baseline">
-                      <p className="text-2xl font-bold text-wedding-navy">$12,450</p>
+                      <p className="text-2xl font-bold text-wedding-navy">${totalRevenue.toLocaleString()}</p>
                       <p className="ml-2 text-sm text-green-500">+12.5%</p>
                     </div>
                   </div>
