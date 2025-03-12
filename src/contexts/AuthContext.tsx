@@ -18,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string, userType: UserType) => Promise<boolean>;
   logout: () => void;
+  register: (userData: { email: string, password: string, name: string, type: UserType, businessDetails?: any }) => Promise<boolean>;
   isAuthenticated: (requiredType?: UserType) => boolean;
 }
 
@@ -100,6 +101,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Registration function
+  const register = async (userData: { email: string, password: string, name: string, type: UserType, businessDetails?: any }): Promise<boolean> => {
+    setLoading(true);
+    
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Check if user with the same email already exists
+        const existingEmails = [MOCK_USERS.user.email, MOCK_USERS.vendor.email, MOCK_USERS.admin.email];
+        const emailExists = existingEmails.includes(userData.email);
+        
+        if (emailExists) {
+          setLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Registration failed",
+            description: "Email is already registered",
+          });
+          resolve(false);
+          return;
+        }
+        
+        // Create new user
+        const newUser = {
+          id: `${userData.type}${Date.now()}`,
+          name: userData.name,
+          email: userData.email,
+          type: userData.type,
+        };
+        
+        // Auto-login after registration
+        setUser(newUser);
+        localStorage.setItem('wedding_app_user', JSON.stringify(newUser));
+        
+        setLoading(false);
+        toast({
+          title: "Registration successful",
+          description: `Welcome, ${newUser.name}!`,
+        });
+        resolve(true);
+      }, 1500);
+    });
+  };
+
   // Logout function
   const logout = () => {
     setUser(null);
@@ -118,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, isAuthenticated }}>
       <BookingProvider>
         {children}
       </BookingProvider>
