@@ -14,6 +14,7 @@ import BookingForm from "./pages/user/BookingForm";
 import UserBookings from "./pages/user/UserBookings";
 import PaymentPage from "./pages/user/PaymentPage";
 import UserLogin from "./pages/user/UserLogin";
+import UserRegister from "./pages/user/UserRegister"; // Import the UserRegister component
 import PrivacyPolicy from "./pages/user/PrivacyPolicy";
 import ContactUs from "./pages/user/ContactUs";
 import HelpCenter from "./pages/user/HelpCenter";
@@ -57,6 +58,7 @@ const App = () => (
             {/* Landing Page - Accessible without login */}
             <Route path="/" element={<Index />} />
             <Route path="/user/login" element={<UserLogin />} />
+            <Route path="/user/register" element={<UserRegister />} /> {/* Add the UserRegister route */}
             <Route path="/vendor/login" element={<VendorLogin />} />
             <Route path="/vendor/register" element={<VendorRegister />} />
             <Route path="/admin/login" element={<AdminLogin />} />
