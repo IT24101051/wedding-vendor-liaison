@@ -17,10 +17,54 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import PriceCalculator from "@/components/admin/PriceCalculator";
 import { useBookings } from "@/contexts/BookingContext";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
-  // Get bookings data
+  // Get bookings data and toast
   const { bookings } = useBookings();
+  const { toast } = useToast();
+  
+  // State for dashboard stats
+  const [totalBookings, setTotalBookings] = useState(0);
+  const [confirmedBookings, setConfirmedBookings] = useState(0);
+  const [pendingBookings, setPendingBookings] = useState(0);
+  const [completedBookings, setCompletedBookings] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+
+  // Update statistics when bookings change
+  useEffect(() => {
+    console.log('Initial dashboard load...');
+    updateDashboardStats();
+  }, []);
+
+  // Watch for booking changes
+  useEffect(() => {
+    console.log('Bookings changed, updating dashboard...');
+    updateDashboardStats();
+    
+    // Show toast notification for booking updates
+    if (bookings.length > 0) {
+      toast({
+        title: "Dashboard Updated",
+        description: `Dashboard statistics refreshed with latest ${bookings.length} bookings.`,
+      });
+    }
+  }, [bookings]);
+
+  // Function to update dashboard statistics
+  const updateDashboardStats = () => {
+    setTotalBookings(bookings.length);
+    setConfirmedBookings(bookings.filter(booking => booking.status === 'confirmed').length);
+    setPendingBookings(bookings.filter(booking => booking.status === 'pending').length);
+    setCompletedBookings(bookings.filter(booking => booking.status === 'completed').length);
+    
+    // Calculate revenue from confirmed and completed bookings with paid status
+    const revenue = bookings
+      .filter(booking => booking.paymentStatus === 'paid')
+      .reduce((total, booking) => total + booking.amount, 0);
+    setTotalRevenue(revenue);
+  };
 
   // Animation variants
   const containerVariants = {
@@ -41,17 +85,6 @@ const AdminDashboard = () => {
       opacity: 1
     }
   };
-
-  // Calculate booking statistics
-  const totalBookings = bookings.length;
-  const confirmedBookings = bookings.filter(booking => booking.status === 'confirmed').length;
-  const pendingBookings = bookings.filter(booking => booking.status === 'pending').length;
-  const completedBookings = bookings.filter(booking => booking.status === 'completed').length;
-  
-  // Calculate revenue from confirmed and completed bookings
-  const totalRevenue = bookings
-    .filter(booking => booking.paymentStatus === 'paid')
-    .reduce((total, booking) => total + booking.amount, 0);
 
   // Updated dashboard stats with real data
   const dashboardStats = [
