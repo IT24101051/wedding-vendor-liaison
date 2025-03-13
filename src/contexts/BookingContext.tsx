@@ -161,7 +161,9 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Get bookings by user ID
   const getBookingsByUserId = (userId: string) => {
-    return bookings.filter(booking => booking.userId === userId);
+    const filtered = bookings.filter(booking => booking.userId === userId);
+    console.log(`Fetching bookings for user ${userId}:`, filtered);
+    return filtered;
   };
 
   // Get bookings by vendor ID
