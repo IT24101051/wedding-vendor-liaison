@@ -1,4 +1,3 @@
-
 package com.weddingvendor.backend;
 
 import java.time.LocalDateTime;
@@ -17,14 +16,43 @@ import java.util.stream.Collectors;
  */
 public class WeddingVendorSystem {
     
+    private static BookingSystem bookingSystem;
+    private static AuthenticationService authService;
+    private static PaymentProcessor paymentProcessor;
+    private static NotificationService notificationService;
+    private static MessagingService messagingService;
+    private static VendorService vendorService;
+    private static ReviewSystem reviewSystem;
+    private static DataPersistenceManager dataPersistenceManager;
+    
     public static void main(String[] args) {
-        // Initialize the system
-        BookingSystem bookingSystem = new BookingSystem();
-        AuthenticationService authService = new AuthenticationService();
-        PaymentProcessor paymentProcessor = new PaymentProcessor();
-        NotificationService notificationService = new NotificationService();
+        // Initialize the system components
+        initialize();
         
         // Register sample users
+        registerSampleUsers();
+        
+        // Sample booking flow
+        demonstrateBookingFlow();
+        
+        // Start API server (in a real application, this would start a web server)
+        startAPIServer();
+    }
+    
+    private static void initialize() {
+        bookingSystem = new BookingSystem();
+        authService = new AuthenticationService();
+        paymentProcessor = new PaymentProcessor();
+        notificationService = new NotificationService();
+        messagingService = new MessagingService();
+        vendorService = new VendorService();
+        reviewSystem = new ReviewSystem();
+        dataPersistenceManager = new DataPersistenceManager();
+        
+        System.out.println("Wedding Vendor System initialized successfully");
+    }
+    
+    private static void registerSampleUsers() {
         User client = new Client("client@example.com", "password", "Demo Client");
         User vendor = new Vendor("vendor@example.com", "password", "Elegant Moments Photography");
         User admin = new Admin("admin@example.com", "admin123", "Admin User");
@@ -33,8 +61,26 @@ public class WeddingVendorSystem {
         authService.registerUser(vendor);
         authService.registerUser(admin);
         
-        // Sample booking flow
+        // Add services for the vendor
+        Service photographyService = new Service(vendor.getId(), "Premium Wedding Photography", 
+            "Professional photography for your special day", 2500.00);
+        Service videoService = new Service(vendor.getId(), "Wedding Videography", 
+            "4K video coverage with drone footage", 3000.00);
+            
+        ((Vendor)vendor).addService(photographyService);
+        ((Vendor)vendor).addService(videoService);
+        
+        vendorService.addVendor((Vendor)vendor);
+        
+        System.out.println("Sample users registered successfully");
+    }
+    
+    private static void demonstrateBookingFlow() {
         if (authService.authenticateUser("client@example.com", "password")) {
+            User client = authService.getUserByEmail("client@example.com");
+            User vendor = authService.getUserByEmail("vendor@example.com");
+            
+            // Create a booking
             Booking booking = new Booking();
             booking.setClientId(client.getId());
             booking.setVendorId(vendor.getId());
@@ -42,7 +88,6 @@ public class WeddingVendorSystem {
             booking.setAmount(2500.00);
             booking.setEventDate(LocalDateTime.now().plusMonths(3));
             
-            // Create booking
             String bookingId = bookingSystem.createBooking(booking);
             System.out.println("Booking created with ID: " + bookingId);
             
@@ -67,9 +112,30 @@ public class WeddingVendorSystem {
                     "You have a new confirmed booking from " + client.getName())
                 );
                 
-                System.out.println("Booking confirmed and notifications sent");
+                // Add to client's booking list
+                ((Client)client).addBooking(bookingId);
+                
+                // Add to vendor's booking list
+                ((Vendor)vendor).addBooking(bookingId);
+                
+                // Create a message thread between client and vendor
+                String threadId = messagingService.createThread(client.getId(), vendor.getId());
+                messagingService.sendMessage(threadId, client.getId(), 
+                    "Hello! I'm excited about our upcoming photo session!");
+                
+                System.out.println("Booking confirmed, notifications sent, and communication initiated");
+                
+                // Save all data changes
+                dataPersistenceManager.saveChanges();
             }
         }
+    }
+    
+    private static void startAPIServer() {
+        APIServer apiServer = new APIServer(8080, authService, bookingSystem, 
+            paymentProcessor, notificationService, messagingService, vendorService, reviewSystem);
+        apiServer.start();
+        System.out.println("API Server started on port 8080");
     }
 }
 
@@ -106,6 +172,11 @@ abstract class User {
     
     // Abstract method demonstrating polymorphism
     public abstract String getUserType();
+    
+    // Additional method for validation
+    public boolean isValid() {
+        return email != null && !email.isEmpty() && password != null && !password.isEmpty();
+    }
 }
 
 class Client extends User {
@@ -217,6 +288,28 @@ class AuthenticationService {
     
     public void invalidateToken(String token) {
         activeTokens.remove(token);
+    }
+    
+    public User getUserByEmail(String email) {
+        return usersByEmail.get(email);
+    }
+    
+    public boolean changePassword(String userId, String oldPassword, String newPassword) {
+        User user = usersById.get(userId);
+        if (user != null && user.validatePassword(oldPassword)) {
+            // In a real implementation, you would update the password here
+            System.out.println("Password changed for user: " + user.getEmail());
+            return true;
+        }
+        return false;
+    }
+    
+    public void logoutAllSessions(String userId) {
+        activeTokens.entrySet().removeIf(entry -> entry.getValue().equals(userId));
+    }
+    
+    public boolean isTokenValid(String token) {
+        return activeTokens.containsKey(token);
     }
 }
 
@@ -363,6 +456,71 @@ class BookingSystem {
             bookings.put(bookingId, booking);
         }
     }
+    
+    public List<Booking> searchBookings(Map<String, String> criteria) {
+        return bookings.values().stream()
+            .filter(booking -> matchesCriteria(booking, criteria))
+            .collect(Collectors.toList());
+    }
+    
+    private boolean matchesCriteria(Booking booking, Map<String, String> criteria) {
+        for (Map.Entry<String, String> entry : criteria.entrySet()) {
+            switch (entry.getKey()) {
+                case "status":
+                    if (!booking.getStatus().toString().equals(entry.getValue())) {
+                        return false;
+                    }
+                    break;
+                case "clientId":
+                    if (!booking.getClientId().equals(entry.getValue())) {
+                        return false;
+                    }
+                    break;
+                case "vendorId":
+                    if (!booking.getVendorId().equals(entry.getValue())) {
+                        return false;
+                    }
+                    break;
+                // Add more criteria as needed
+            }
+        }
+        return true;
+    }
+    
+    public List<Booking> getUpcomingBookings(String userId, boolean isVendor) {
+        List<String> bookingIds;
+        if (isVendor) {
+            bookingIds = vendorBookings.getOrDefault(userId, new ArrayList<>());
+        } else {
+            bookingIds = clientBookings.getOrDefault(userId, new ArrayList<>());
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        return bookingIds.stream()
+            .map(bookings::get)
+            .filter(booking -> booking.getEventDate().isAfter(now))
+            .sorted(Comparator.comparing(Booking::getEventDate))
+            .collect(Collectors.toList());
+    }
+    
+    public Map<String, Integer> getBookingStatistics(String vendorId) {
+        List<Booking> vendorAllBookings = getVendorBookings(vendorId);
+        
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("total", vendorAllBookings.size());
+        stats.put("pending", countBookingsByStatus(vendorAllBookings, BookingStatus.PENDING));
+        stats.put("confirmed", countBookingsByStatus(vendorAllBookings, BookingStatus.CONFIRMED));
+        stats.put("completed", countBookingsByStatus(vendorAllBookings, BookingStatus.COMPLETED));
+        stats.put("cancelled", countBookingsByStatus(vendorAllBookings, BookingStatus.CANCELLED));
+        
+        return stats;
+    }
+    
+    private int countBookingsByStatus(List<Booking> bookings, BookingStatus status) {
+        return (int) bookings.stream()
+            .filter(booking -> booking.getStatus() == status)
+            .count();
+    }
 }
 
 // PAYMENT SYSTEM
@@ -475,6 +633,46 @@ class PaymentProcessor {
     public Payment getPayment(String paymentId) {
         return payments.get(paymentId);
     }
+    
+    public List<Payment> getPaymentsByUser(String userId, boolean isVendor) {
+        return payments.values().stream()
+            .filter(payment -> {
+                Booking booking = new BookingSystem().getBooking(payment.getBookingId());
+                if (booking != null) {
+                    return isVendor ? 
+                        booking.getVendorId().equals(userId) : 
+                        booking.getClientId().equals(userId);
+                }
+                return false;
+            })
+            .collect(Collectors.toList());
+    }
+    
+    public Map<String, Double> getRevenueStatistics(String vendorId, int months) {
+        Map<String, Double> revenueByMonth = new HashMap<>();
+        LocalDateTime now = LocalDateTime.now();
+        
+        for (int i = 0; i < months; i++) {
+            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime monthEnd = monthStart.plusMonths(1).minusNanos(1);
+            String monthKey = monthStart.getMonth() + " " + monthStart.getYear();
+            
+            double monthlyRevenue = getPaymentsByUser(vendorId, true).stream()
+                .filter(payment -> {
+                    LocalDateTime paymentDate = payment.getPaymentDate();
+                    return paymentDate != null && 
+                           !paymentDate.isBefore(monthStart) && 
+                           !paymentDate.isAfter(monthEnd) &&
+                           payment.getStatus() == PaymentStatus.PAID;
+                })
+                .mapToDouble(Payment::getAmount)
+                .sum();
+            
+            revenueByMonth.put(monthKey, monthlyRevenue);
+        }
+        
+        return revenueByMonth;
+    }
 }
 
 // NOTIFICATION SYSTEM
@@ -556,6 +754,27 @@ class NotificationService {
         if (notifications != null) {
             notifications.forEach(n -> n.setRead(true));
         }
+    }
+    
+    public boolean hasUnreadNotifications(String userId) {
+        List<Notification> notifications = getUnreadNotifications(userId);
+        return !notifications.isEmpty();
+    }
+    
+    public int getUnreadCount(String userId) {
+        return getUnreadNotifications(userId).size();
+    }
+    
+    public List<Notification> getPaginatedNotifications(String userId, int page, int pageSize) {
+        List<Notification> allNotifications = getUserNotifications(userId);
+        int startIndex = page * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, allNotifications.size());
+        
+        if (startIndex >= allNotifications.size()) {
+            return new ArrayList<>();
+        }
+        
+        return allNotifications.subList(startIndex, endIndex);
     }
 }
 
@@ -659,5 +878,295 @@ class MessagingService {
     public List<Message> getThreadMessages(String threadId) {
         MessageThread thread = threads.get(threadId);
         return thread != null ? thread.getMessages() : new ArrayList<>();
+    }
+    
+    public List<Message> getUnreadMessages(String userId) {
+        List<MessageThread> userThreadsList = getUserThreads(userId);
+        
+        return userThreadsList.stream()
+            .flatMap(thread -> thread.getMessages().stream())
+            .filter(message -> message.getReceiverId().equals(userId) && !message.isRead())
+            .collect(Collectors.toList());
+    }
+    
+    public int getUnreadCount(String userId) {
+        return getUnreadMessages(userId).size();
+    }
+    
+    public void markAllAsRead(String userId) {
+        List<MessageThread> userThreadsList = getUserThreads(userId);
+        
+        userThreadsList.forEach(thread -> 
+            thread.getMessages().stream()
+                .filter(message -> message.getReceiverId().equals(userId))
+                .forEach(message -> message.setRead(true))
+        );
+    }
+    
+    public List<MessageThread> searchThreads(String userId, String keyword) {
+        List<MessageThread> userThreadsList = getUserThreads(userId);
+        
+        return userThreadsList.stream()
+            .filter(thread -> 
+                thread.getMessages().stream()
+                    .anyMatch(message -> message.getContent().toLowerCase().contains(keyword.toLowerCase()))
+            )
+            .collect(Collectors.toList());
+    }
+}
+
+// VENDOR SERVICE
+
+class VendorService {
+    private Map<String, Vendor> vendors;
+    private Map<String, List<String>> vendorsByCategory;
+    
+    public VendorService() {
+        this.vendors = new HashMap<>();
+        this.vendorsByCategory = new HashMap<>();
+    }
+    
+    public void addVendor(Vendor vendor) {
+        vendors.put(vendor.getId(), vendor);
+        // In a real implementation, you would have categories
+        vendorsByCategory.computeIfAbsent("photography", k -> new ArrayList<>())
+                         .add(vendor.getId());
+    }
+    
+    public Vendor getVendor(String vendorId) {
+        return vendors.get(vendorId);
+    }
+    
+    public List<Vendor> searchVendors(String keyword) {
+        return vendors.values().stream()
+            .filter(vendor -> 
+                vendor.getName().toLowerCase().contains(keyword.toLowerCase()) ||
+                (vendor.getBusinessName() != null && 
+                 vendor.getBusinessName().toLowerCase().contains(keyword.toLowerCase()))
+            )
+            .collect(Collectors.toList());
+    }
+    
+    public List<Vendor> getVendorsByCategory(String category) {
+        List<String> vendorIds = vendorsByCategory.getOrDefault(category, new ArrayList<>());
+        return vendorIds.stream()
+            .map(vendors::get)
+            .collect(Collectors.toList());
+    }
+    
+    public List<Service> getVendorServices(String vendorId) {
+        Vendor vendor = vendors.get(vendorId);
+        return vendor != null ? vendor.getServices() : new ArrayList<>();
+    }
+    
+    public Map<String, Integer> getVendorStatistics() {
+        Map<String, Integer> stats = new HashMap<>();
+        
+        // Count vendors by category
+        for (Map.Entry<String, List<String>> entry : vendorsByCategory.entrySet()) {
+            stats.put(entry.getKey(), entry.getValue().size());
+        }
+        
+        stats.put("total", vendors.size());
+        
+        return stats;
+    }
+}
+
+// REVIEW SYSTEM
+
+class Review {
+    private String id;
+    private String bookingId;
+    private String clientId;
+    private String vendorId;
+    private int rating;
+    private String comment;
+    private LocalDateTime createdAt;
+    private List<String> images;
+    
+    public Review(String bookingId, String clientId, String vendorId, int rating, String comment) {
+        this.id = UUID.randomUUID().toString();
+        this.bookingId = bookingId;
+        this.clientId = clientId;
+        this.vendorId = vendorId;
+        this.rating = rating;
+        this.comment = comment;
+        this.createdAt = LocalDateTime.now();
+        this.images = new ArrayList<>();
+    }
+    
+    // Getters and setters
+    public String getId() { return id; }
+    public String getBookingId() { return bookingId; }
+    public String getClientId() { return clientId; }
+    public String getVendorId() { return vendorId; }
+    public int getRating() { return rating; }
+    public void setRating(int rating) { this.rating = rating; }
+    public String getComment() { return comment; }
+    public void setComment(String comment) { this.comment = comment; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public List<String> getImages() { return new ArrayList<>(images); }
+    public void addImage(String imageUrl) { this.images.add(imageUrl); }
+}
+
+class ReviewSystem {
+    private Map<String, Review> reviews;
+    private Map<String, List<String>> vendorReviews;
+    private Map<String, List<String>> clientReviews;
+    
+    public ReviewSystem() {
+        this.reviews = new HashMap<>();
+        this.vendorReviews = new HashMap<>();
+        this.clientReviews = new HashMap<>();
+    }
+    
+    public String createReview(Review review) {
+        reviews.put(review.getId(), review);
+        
+        // Update vendor reviews index
+        vendorReviews.computeIfAbsent(review.getVendorId(), k -> new ArrayList<>())
+                     .add(review.getId());
+        
+        // Update client reviews index
+        clientReviews.computeIfAbsent(review.getClientId(), k -> new ArrayList<>())
+                     .add(review.getId());
+        
+        return review.getId();
+    }
+    
+    public Review getReview(String reviewId) {
+        return reviews.get(reviewId);
+    }
+    
+    public List<Review> getVendorReviews(String vendorId) {
+        List<String> reviewIds = vendorReviews.getOrDefault(vendorId, new ArrayList<>());
+        return reviewIds.stream()
+                       .map(reviews::get)
+                       .collect(Collectors.toList());
+    }
+    
+    public List<Review> getClientReviews(String clientId) {
+        List<String> reviewIds = clientReviews.getOrDefault(clientId, new ArrayList<>());
+        return reviewIds.stream()
+                       .map(reviews::get)
+                       .collect(Collectors.toList());
+    }
+    
+    public double getAverageRating(String vendorId) {
+        List<Review> vendorReviewsList = getVendorReviews(vendorId);
+        if (vendorReviewsList.isEmpty()) {
+            return 0.0;
+        }
+        
+        double sum = vendorReviewsList.stream()
+                                     .mapToInt(Review::getRating)
+                                     .sum();
+        return sum / vendorReviewsList.size();
+    }
+    
+    public Map<Integer, Integer> getRatingDistribution(String vendorId) {
+        List<Review> vendorReviewsList = getVendorReviews(vendorId);
+        Map<Integer, Integer> distribution = new HashMap<>();
+        
+        for (int i = 1; i <= 5; i++) {
+            final int rating = i;
+            int count = (int) vendorReviewsList.stream()
+                                             .filter(review -> review.getRating() == rating)
+                                             .count();
+            distribution.put(i, count);
+        }
+        
+        return distribution;
+    }
+}
+
+// DATA PERSISTENCE
+
+class DataPersistenceManager {
+    // In a real application, this would handle database connections
+    // or file I/O to save and load data
+    
+    public void saveChanges() {
+        // Simulate saving data to a database or file
+        System.out.println("All changes saved to database");
+    }
+    
+    public void loadData() {
+        // Simulate loading data from a database or file
+        System.out.println("Data loaded from database");
+    }
+    
+    public void backup() {
+        // Simulate creating a backup
+        System.out.println("Backup created at " + LocalDateTime.now());
+    }
+}
+
+// API SERVER
+
+class APIServer {
+    private int port;
+    private AuthenticationService authService;
+    private BookingSystem bookingSystem;
+    private PaymentProcessor paymentProcessor;
+    private NotificationService notificationService;
+    private MessagingService messagingService;
+    private VendorService vendorService;
+    private ReviewSystem reviewSystem;
+    
+    public APIServer(int port, AuthenticationService authService, BookingSystem bookingSystem,
+                     PaymentProcessor paymentProcessor, NotificationService notificationService,
+                     MessagingService messagingService, VendorService vendorService,
+                     ReviewSystem reviewSystem) {
+        this.port = port;
+        this.authService = authService;
+        this.bookingSystem = bookingSystem;
+        this.paymentProcessor = paymentProcessor;
+        this.notificationService = notificationService;
+        this.messagingService = messagingService;
+        this.vendorService = vendorService;
+        this.reviewSystem = reviewSystem;
+    }
+    
+    public void start() {
+        // In a real application, this would start a web server like Tomcat, Jetty, etc.
+        // and define REST API endpoints for the different service methods
+        
+        configureEndpoints();
+    }
+    
+    private void configureEndpoints() {
+        // This is a simplified representation of setting up API endpoints
+        // In a real application, this would define actual HTTP endpoints
+        
+        // Auth endpoints
+        System.out.println("Configured Auth endpoints: /api/auth/login, /api/auth/register, /api/auth/logout");
+        
+        // User endpoints
+        System.out.println("Configured User endpoints: /api/users/{id}, /api/users/profile");
+        
+        // Vendor endpoints
+        System.out.println("Configured Vendor endpoints: /api/vendors, /api/vendors/{id}, /api/vendors/search");
+        
+        // Booking endpoints
+        System.out.println("Configured Booking endpoints: /api/bookings, /api/bookings/{id}, /api/bookings/user/{id}");
+        
+        // Payment endpoints
+        System.out.println("Configured Payment endpoints: /api/payments, /api/payments/{id}, /api/payments/process");
+        
+        // Notification endpoints
+        System.out.println("Configured Notification endpoints: /api/notifications, /api/notifications/unread");
+        
+        // Messaging endpoints
+        System.out.println("Configured Messaging endpoints: /api/messages, /api/messages/threads");
+        
+        // Review endpoints
+        System.out.println("Configured Review endpoints: /api/reviews, /api/reviews/vendor/{id}");
+    }
+    
+    public void stop() {
+        // In a real application, this would shut down the web server
+        System.out.println("API Server stopped");
     }
 }
