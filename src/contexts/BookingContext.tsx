@@ -186,9 +186,43 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Get bookings by vendor ID
   const getBookingsByVendorId = (vendorId: string) => {
     console.log(`Fetching bookings for vendor ${vendorId} from total ${bookings.length} bookings`);
-    const filtered = bookings.filter(booking => booking.vendorId === vendorId);
-    console.log(`Found ${filtered.length} bookings for vendor ${vendorId}:`, filtered);
-    return filtered;
+    
+    // First try exact match
+    const exactMatches = bookings.filter(booking => booking.vendorId === vendorId);
+    
+    if (exactMatches.length > 0) {
+      console.log(`Found ${exactMatches.length} bookings for vendor ${vendorId} with exact match:`, exactMatches);
+      return exactMatches;
+    }
+    
+    // If no exact matches, check for numeric/string mismatches
+    console.log(`No exact matches for vendor ${vendorId}, checking numeric/string variations`);
+    
+    // If vendorId has a prefix (like "vendor1"), also check for the numeric part
+    if (typeof vendorId === 'string' && vendorId.startsWith('vendor')) {
+      const numericId = vendorId.replace('vendor', '');
+      const numericMatches = bookings.filter(booking => booking.vendorId === numericId);
+      
+      if (numericMatches.length > 0) {
+        console.log(`Found ${numericMatches.length} bookings using numeric ID ${numericId}:`, numericMatches);
+        return numericMatches;
+      }
+    }
+    
+    // If vendorId is numeric or just a string, also check with "vendor" prefix
+    const prefixedId = `vendor${vendorId}`;
+    const prefixedMatches = bookings.filter(booking => booking.vendorId === prefixedId);
+    
+    if (prefixedMatches.length > 0) {
+      console.log(`Found ${prefixedMatches.length} bookings using prefixed ID ${prefixedId}:`, prefixedMatches);
+      return prefixedMatches;
+    }
+    
+    // Log all bookings if nothing was found to help with debugging
+    console.log('No bookings found with any ID variation. All bookings:', bookings);
+    
+    // Return empty array if no matches
+    return [];
   };
 
   // Get a booking by ID

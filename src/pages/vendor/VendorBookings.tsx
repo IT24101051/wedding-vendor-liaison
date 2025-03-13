@@ -21,7 +21,32 @@ const VendorBookings = () => {
   // Function to load vendor bookings
   const loadVendorBookings = () => {
     if (user && user.id) {
-      const filteredBookings = getBookingsByVendorId(user.id);
+      // Get all bookings and filter manually to ensure we're catching all formats of vendorId
+      // This addresses the issue of different ID formats ("vendor1" vs "1", etc.)
+      console.log("Loading vendor bookings for user ID:", user.id);
+      const userIdStr = user.id.toString();
+      
+      // First try exact match
+      let filteredBookings = getBookingsByVendorId(userIdStr);
+      
+      // If we got bookings, use them. If not, look for alternative formats
+      if (filteredBookings.length === 0) {
+        console.log("No exact matches found, checking for ID format variations");
+        // If user ID has a prefix like "vendor1", try without the prefix
+        if (userIdStr.startsWith('vendor')) {
+          const numericId = userIdStr.replace('vendor', '');
+          filteredBookings = getBookingsByVendorId(numericId);
+          console.log(`Tried numeric ID ${numericId}, found ${filteredBookings.length} bookings`);
+        } 
+        // If user ID is numeric, try with "vendor" prefix
+        else {
+          const prefixedId = `vendor${userIdStr}`;
+          filteredBookings = getBookingsByVendorId(prefixedId);
+          console.log(`Tried prefixed ID ${prefixedId}, found ${filteredBookings.length} bookings`);
+        }
+      }
+      
+      console.log("All bookings:", bookings);
       console.log("Vendor bookings loaded:", filteredBookings);
       setVendorBookings(filteredBookings);
     }
