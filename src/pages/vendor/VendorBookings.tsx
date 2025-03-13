@@ -5,25 +5,59 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, MapPin, User, Phone, Mail, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Phone, Mail, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { useBookings, Booking } from '@/contexts/BookingContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const VendorBookings = () => {
-  const { bookings, updateBooking, getBookingsByVendorId } = useBookings();
+  const { bookings, updateBooking, getBookingsByVendorId, refreshBookings } = useBookings();
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
   const [vendorBookings, setVendorBookings] = useState<Booking[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
+  // Function to load vendor bookings
+  const loadVendorBookings = () => {
     if (user && user.id) {
       const filteredBookings = getBookingsByVendorId(user.id);
+      console.log("Vendor bookings loaded:", filteredBookings);
       setVendorBookings(filteredBookings);
-      console.log("Vendor bookings updated:", filteredBookings);
     }
-  }, [user, bookings, getBookingsByVendorId]);
+  };
+
+  // Manual refresh function
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    console.log("Manually refreshing bookings...");
+    
+    // First refresh bookings from localStorage
+    refreshBookings();
+    
+    // Short timeout to ensure the refresh has time to complete
+    setTimeout(() => {
+      loadVendorBookings();
+      setIsRefreshing(false);
+      toast({
+        title: "Bookings Refreshed",
+        description: "Latest booking data has been loaded",
+      });
+    }, 500);
+  };
+
+  useEffect(() => {
+    // On initial load, refresh from localStorage first
+    console.log("VendorBookings mounted, refreshing bookings...");
+    refreshBookings();
+    loadVendorBookings();
+  }, [user]);
+
+  // When bookings state changes in context
+  useEffect(() => {
+    console.log("Bookings context updated, reloading vendor bookings...");
+    loadVendorBookings();
+  }, [bookings, user]);
 
   const getFilteredBookings = () => {
     if (activeTab === 'all') {
@@ -137,7 +171,18 @@ const VendorBookings = () => {
   return (
     <VendorLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-wedding-navy mb-6">Manage Your Bookings</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-wedding-navy">Manage Your Bookings</h1>
+          <Button 
+            onClick={handleRefresh} 
+            variant="outline" 
+            className="border-wedding-navy text-wedding-navy"
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Bookings'}
+          </Button>
+        </div>
         
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-between items-center mb-6">

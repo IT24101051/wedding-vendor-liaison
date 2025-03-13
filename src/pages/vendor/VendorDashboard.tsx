@@ -3,25 +3,28 @@ import { useEffect, useState, useCallback } from "react";
 import VendorLayout from "@/components/layouts/VendorLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, DollarSign, Users, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { CalendarDays, DollarSign, Users, CheckCircle, AlertCircle, Clock, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBookings } from "@/contexts/BookingContext";
+import { useToast } from "@/hooks/use-toast";
 
 const VendorDashboard = () => {
   // Get current vendor information
   const { user } = useAuth();
   const vendorId = user?.id || 'vendor1';
   
-  // Get bookings context
-  const { bookings, getBookingsByVendorId } = useBookings();
+  // Get bookings context with the refreshBookings function
+  const { bookings, getBookingsByVendorId, refreshBookings } = useBookings();
+  const { toast } = useToast();
   
   // Set up state for dashboard data
   const [vendorBookings, setVendorBookings] = useState([]);
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [pendingBookings, setPendingBookings] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Create a memoized function to get vendor bookings
   const updateDashboardData = useCallback(() => {
@@ -35,6 +38,25 @@ const VendorDashboard = () => {
     setPendingBookings(currentVendorBookings.filter(booking => booking.status === 'pending').length);
   }, [vendorId, getBookingsByVendorId]);
   
+  // Manual refresh function
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    console.log("Manually refreshing bookings data...");
+    
+    // First refresh bookings from localStorage
+    refreshBookings();
+    
+    // Short timeout to ensure the refresh has time to complete
+    setTimeout(() => {
+      updateDashboardData();
+      setIsRefreshing(false);
+      toast({
+        title: "Dashboard Refreshed",
+        description: "Latest booking data has been loaded",
+      });
+    }, 500);
+  };
+  
   // Update dashboard data whenever bookings change
   useEffect(() => {
     console.log("Bookings changed, updating dashboard...");
@@ -44,8 +66,11 @@ const VendorDashboard = () => {
   // Update dashboard data on initial load
   useEffect(() => {
     console.log("Initial dashboard load...");
+    // First refresh from localStorage
+    refreshBookings();
+    // Then update dashboard
     updateDashboardData();
-  }, [updateDashboardData]);
+  }, [updateDashboardData, refreshBookings]);
   
   // Animation variants
   const containerVariants = {
@@ -101,10 +126,19 @@ const VendorDashboard = () => {
       <section className="py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-wedding-navy">Welcome back, Elegant Moments Photography</h1>
+            <h1 className="text-3xl font-bold text-wedding-navy">Welcome back, {user?.name || "Elegant Moments Photography"}</h1>
             <p className="text-gray-600">Here's what's happening with your business today</p>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3">
+            <Button 
+              onClick={handleRefresh} 
+              variant="outline" 
+              className="border-wedding-navy text-wedding-navy"
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            </Button>
             <Link to="/vendor/services">
               <Button className="bg-wedding-gold text-white hover:bg-wedding-gold/90">
                 Add New Service

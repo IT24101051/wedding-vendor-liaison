@@ -27,6 +27,7 @@ interface BookingContextType {
   getBookingsByUserId: (userId: string) => Booking[];
   getBookingsByVendorId: (vendorId: string) => Booking[];
   getBookingById: (id: string) => Booking | undefined;
+  refreshBookings: () => void;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -86,28 +87,43 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [bookings, setBookings] = useState<Booking[]>([]);
   const { toast } = useToast();
 
+  // Function to load bookings from localStorage
+  const loadBookings = () => {
+    try {
+      const storedBookings = localStorage.getItem('wedding_app_bookings');
+      if (storedBookings) {
+        const parsedBookings = JSON.parse(storedBookings);
+        console.log('Loading bookings from localStorage:', parsedBookings);
+        setBookings(parsedBookings);
+        return;
+      }
+    } catch (e) {
+      console.error('Error parsing stored bookings:', e);
+    }
+    
+    // If no bookings in localStorage or error parsing, use initial bookings
+    console.log('Using initial bookings data');
+    setBookings(INITIAL_BOOKINGS);
+    localStorage.setItem('wedding_app_bookings', JSON.stringify(INITIAL_BOOKINGS));
+  };
+
+  // Function to explicitly refresh bookings from localStorage
+  const refreshBookings = () => {
+    console.log('Manually refreshing bookings from localStorage');
+    loadBookings();
+  };
+
   // Load initial bookings
   useEffect(() => {
-    const storedBookings = localStorage.getItem('wedding_app_bookings');
-    if (storedBookings) {
-      try {
-        setBookings(JSON.parse(storedBookings));
-      } catch (e) {
-        console.error('Error parsing stored bookings:', e);
-        setBookings(INITIAL_BOOKINGS);
-        localStorage.setItem('wedding_app_bookings', JSON.stringify(INITIAL_BOOKINGS));
-      }
-    } else {
-      setBookings(INITIAL_BOOKINGS);
-      localStorage.setItem('wedding_app_bookings', JSON.stringify(INITIAL_BOOKINGS));
-    }
+    console.log('BookingProvider mounted, loading initial bookings');
+    loadBookings();
   }, []);
 
   // Save bookings to localStorage whenever they change
   useEffect(() => {
     if (bookings.length > 0) {
+      console.log('Saving updated bookings to localStorage:', bookings);
       localStorage.setItem('wedding_app_bookings', JSON.stringify(bookings));
-      console.log('Updated bookings in localStorage:', bookings);
     }
   }, [bookings]);
 
@@ -161,15 +177,17 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Get bookings by user ID
   const getBookingsByUserId = (userId: string) => {
+    console.log(`Fetching bookings for user ${userId} from total ${bookings.length} bookings`);
     const filtered = bookings.filter(booking => booking.userId === userId);
-    console.log(`Fetching bookings for user ${userId}:`, filtered);
+    console.log(`Found ${filtered.length} bookings for user ${userId}:`, filtered);
     return filtered;
   };
 
   // Get bookings by vendor ID
   const getBookingsByVendorId = (vendorId: string) => {
+    console.log(`Fetching bookings for vendor ${vendorId} from total ${bookings.length} bookings`);
     const filtered = bookings.filter(booking => booking.vendorId === vendorId);
-    console.log(`Fetching bookings for vendor ${vendorId}:`, filtered);
+    console.log(`Found ${filtered.length} bookings for vendor ${vendorId}:`, filtered);
     return filtered;
   };
 
@@ -185,7 +203,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updateBooking, 
       getBookingsByUserId, 
       getBookingsByVendorId, 
-      getBookingById 
+      getBookingById,
+      refreshBookings
     }}>
       {children}
     </BookingContext.Provider>
