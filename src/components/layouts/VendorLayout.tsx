@@ -1,8 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import {
   Store,
   LayoutDashboard,
@@ -19,19 +20,38 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  
+  // Check if user is authenticated as vendor
+  useEffect(() => {
+    if (!isAuthenticated('vendor')) {
+      navigate('/vendor/login', { state: { from: location } });
+    }
+  }, [isAuthenticated, navigate, location]);
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
   const handleLogout = () => {
-    // Properly call logout and ensure navigation happens after
     console.log("Logging out vendor...");
     logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out of your vendor account"
+    });
     // Navigate after logout
     navigate('/vendor/login');
   };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-wedding-navy"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-wedding-light">

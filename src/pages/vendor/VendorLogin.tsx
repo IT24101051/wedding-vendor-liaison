@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Store, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const VendorLogin = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +20,7 @@ const VendorLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
   // Get the location the user was trying to access
   const from = location.state?.from?.pathname || "/vendor/dashboard";
@@ -35,13 +37,23 @@ const VendorLogin = () => {
     setError("");
     setIsLoading(true);
     
-    const success = await login(email, password, 'vendor');
-    
-    setIsLoading(false);
-    if (success) {
-      navigate(from);
-    } else {
-      setError("Invalid email or password. Try vendor@example.com / password");
+    try {
+      const success = await login(email, password, 'vendor');
+      
+      if (success) {
+        toast({
+          title: "Login successful",
+          description: "You've been logged in to your vendor account",
+        });
+        navigate(from);
+      } else {
+        setError("Invalid email or password. Try vendor@example.com / password");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An error occurred during login. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
