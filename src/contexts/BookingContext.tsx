@@ -94,7 +94,22 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (storedBookings) {
         const parsedBookings = JSON.parse(storedBookings);
         console.log('Loading bookings from localStorage:', parsedBookings);
-        setBookings(parsedBookings);
+        
+        // Ensure all vendorIds follow consistent format (always prepend "vendor" if not already)
+        const normalizedBookings = parsedBookings.map((booking: Booking) => {
+          if (!booking.vendorId.startsWith('vendor')) {
+            console.log(`Normalizing vendorId from ${booking.vendorId} to vendor${booking.vendorId}`);
+            return {
+              ...booking,
+              vendorId: `vendor${booking.vendorId}`
+            };
+          }
+          return booking;
+        });
+        
+        setBookings(normalizedBookings);
+        // Also update localStorage with normalized bookings
+        localStorage.setItem('wedding_app_bookings', JSON.stringify(normalizedBookings));
         return;
       }
     } catch (e) {
@@ -110,6 +125,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Function to explicitly refresh bookings from localStorage
   const refreshBookings = () => {
     console.log('Manually refreshing bookings from localStorage');
+    localStorage.removeItem('wedding_app_bookings');
     loadBookings();
   };
 
@@ -130,8 +146,17 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Add a new booking
   const addBooking = (newBooking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Booking => {
     const now = new Date().toISOString();
+    
+    // Ensure vendorId follows consistent format (always prepend "vendor" if not already)
+    let vendorId = newBooking.vendorId;
+    if (!vendorId.startsWith('vendor')) {
+      vendorId = `vendor${vendorId}`;
+      console.log(`Normalized vendorId in new booking from ${newBooking.vendorId} to ${vendorId}`);
+    }
+    
     const bookingWithId: Booking = {
       ...newBooking,
+      vendorId,
       id: `booking${Date.now()}`,
       createdAt: now,
       updatedAt: now
@@ -183,46 +208,25 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return filtered;
   };
 
-  // Get bookings by vendor ID
+  // Get bookings by vendor ID - now with standardized format checking
   const getBookingsByVendorId = (vendorId: string) => {
-    console.log(`Fetching bookings for vendor ${vendorId} from total ${bookings.length} bookings`);
-    
-    // First try exact match
-    const exactMatches = bookings.filter(booking => booking.vendorId === vendorId);
-    
-    if (exactMatches.length > 0) {
-      console.log(`Found ${exactMatches.length} bookings for vendor ${vendorId} with exact match:`, exactMatches);
-      return exactMatches;
+    // Ensure vendorId follows consistent format for lookup
+    let lookupId = vendorId;
+    if (!lookupId.startsWith('vendor')) {
+      lookupId = `vendor${lookupId}`;
     }
     
-    // If no exact matches, check for numeric/string mismatches
-    console.log(`No exact matches for vendor ${vendorId}, checking numeric/string variations`);
+    console.log(`Fetching bookings for vendor ${vendorId} (normalized: ${lookupId}) from total ${bookings.length} bookings`);
     
-    // If vendorId has a prefix (like "vendor1"), also check for the numeric part
-    if (typeof vendorId === 'string' && vendorId.startsWith('vendor')) {
-      const numericId = vendorId.replace('vendor', '');
-      const numericMatches = bookings.filter(booking => booking.vendorId === numericId);
-      
-      if (numericMatches.length > 0) {
-        console.log(`Found ${numericMatches.length} bookings using numeric ID ${numericId}:`, numericMatches);
-        return numericMatches;
-      }
+    const filtered = bookings.filter(booking => booking.vendorId === lookupId);
+    console.log(`Found ${filtered.length} bookings for vendor ${lookupId}:`, filtered);
+    
+    if (filtered.length === 0) {
+      // Log all bookings if nothing was found to help with debugging
+      console.log('No bookings found. All bookings:', bookings);
     }
     
-    // If vendorId is numeric or just a string, also check with "vendor" prefix
-    const prefixedId = `vendor${vendorId}`;
-    const prefixedMatches = bookings.filter(booking => booking.vendorId === prefixedId);
-    
-    if (prefixedMatches.length > 0) {
-      console.log(`Found ${prefixedMatches.length} bookings using prefixed ID ${prefixedId}:`, prefixedMatches);
-      return prefixedMatches;
-    }
-    
-    // Log all bookings if nothing was found to help with debugging
-    console.log('No bookings found with any ID variation. All bookings:', bookings);
-    
-    // Return empty array if no matches
-    return [];
+    return filtered;
   };
 
   // Get a booking by ID

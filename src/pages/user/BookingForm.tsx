@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import UserLayout from "@/components/layouts/UserLayout";
@@ -105,10 +106,18 @@ const BookingForm = () => {
     const selectedServiceDetails = vendor.services.find(s => s.id === service);
     const price = selectedServiceDetails ? parseInt(selectedServiceDetails.price.replace(/[^0-9]/g, '') || '0') : 0;
     
+    // Ensure vendorId follows consistent format (always prefixed with "vendor")
+    let vendorId = vendor.id.toString();
+    if (!vendorId.startsWith('vendor')) {
+      vendorId = `vendor${vendorId}`;
+    }
+    
+    console.log(`Creating booking with vendorId: ${vendorId}`);
+    
     const newBooking = {
       userId: user?.id || 'user1',
       userName: `${firstName} ${lastName}`,
-      vendorId: vendor.id.toString(),
+      vendorId: vendorId,
       vendorName: vendor.name,
       serviceName: selectedServiceDetails?.name || '',
       serviceDate: date ? format(date, 'yyyy-MM-dd') : '',
@@ -120,8 +129,18 @@ const BookingForm = () => {
     };
     
     try {
+      console.log("Creating booking with data:", newBooking);
+      
       // Add booking and redirect to payment
       const booking = addBooking(newBooking);
+      
+      // Force local storage update for immediate consistency
+      const existingBookings = JSON.parse(localStorage.getItem('wedding_app_bookings') || '[]');
+      const updatedBookings = [...existingBookings, booking];
+      localStorage.setItem('wedding_app_bookings', JSON.stringify(updatedBookings));
+      
+      console.log("Booking created successfully:", booking);
+      console.log("Updated localStorage with new booking");
       
       setTimeout(() => {
         setIsSubmitting(false);

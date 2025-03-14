@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import VendorLayout from '@/components/layouts/VendorLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,43 +20,34 @@ const VendorBookings = () => {
   // Function to load vendor bookings
   const loadVendorBookings = () => {
     if (user && user.id) {
-      // Get all bookings and filter manually to ensure we're catching all formats of vendorId
-      // This addresses the issue of different ID formats ("vendor1" vs "1", etc.)
-      console.log("Loading vendor bookings for user ID:", user.id);
-      const userIdStr = user.id.toString();
-      
-      // First try exact match
-      let filteredBookings = getBookingsByVendorId(userIdStr);
-      
-      // If we got bookings, use them. If not, look for alternative formats
-      if (filteredBookings.length === 0) {
-        console.log("No exact matches found, checking for ID format variations");
-        // If user ID has a prefix like "vendor1", try without the prefix
-        if (userIdStr.startsWith('vendor')) {
-          const numericId = userIdStr.replace('vendor', '');
-          filteredBookings = getBookingsByVendorId(numericId);
-          console.log(`Tried numeric ID ${numericId}, found ${filteredBookings.length} bookings`);
-        } 
-        // If user ID is numeric, try with "vendor" prefix
-        else {
-          const prefixedId = `vendor${userIdStr}`;
-          filteredBookings = getBookingsByVendorId(prefixedId);
-          console.log(`Tried prefixed ID ${prefixedId}, found ${filteredBookings.length} bookings`);
-        }
+      // Ensure consistent format for vendor ID
+      let vendorId = user.id.toString();
+      if (!vendorId.startsWith('vendor')) {
+        vendorId = `vendor${vendorId}`;
       }
       
-      console.log("All bookings:", bookings);
+      console.log("Loading vendor bookings for user ID:", user.id, "(normalized to", vendorId, ")");
+      
+      const filteredBookings = getBookingsByVendorId(vendorId);
       console.log("Vendor bookings loaded:", filteredBookings);
+      
+      // Debug info
+      console.log("All bookings in system:", bookings);
+      
+      // Set the bookings
       setVendorBookings(filteredBookings);
     }
   };
 
-  // Manual refresh function
+  // Manual refresh function with localStorage clear for a full reset
   const handleRefresh = () => {
     setIsRefreshing(true);
-    console.log("Manually refreshing bookings...");
+    console.log("Manually refreshing bookings with localStorage clear...");
     
-    // First refresh bookings from localStorage
+    // First clear localStorage to force a complete refresh
+    localStorage.removeItem('wedding_app_bookings');
+    
+    // Then refresh bookings from initial data
     refreshBookings();
     
     // Short timeout to ensure the refresh has time to complete
@@ -68,13 +58,13 @@ const VendorBookings = () => {
         title: "Bookings Refreshed",
         description: "Latest booking data has been loaded",
       });
-    }, 500);
+    }, 800); // Increased timeout to ensure data is fully reloaded
   };
 
+  // Initial load
   useEffect(() => {
-    // On initial load, refresh from localStorage first
     console.log("VendorBookings mounted, refreshing bookings...");
-    refreshBookings();
+    refreshBookings(); // Force a refresh on component mount
     loadVendorBookings();
   }, [user]);
 
@@ -205,7 +195,7 @@ const VendorBookings = () => {
             disabled={isRefreshing}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh Bookings'}
+            {isRefreshing ? 'Refreshing...' : 'Force Refresh Bookings'}
           </Button>
         </div>
         
