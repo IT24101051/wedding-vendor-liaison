@@ -75,7 +75,7 @@ const Index = () => {
                 <p className="text-gray-600 mb-6 flex-grow">
                   Find and book the perfect vendors for your special day. Browse services, read reviews, and manage your wedding planning in one place.
                 </p>
-                <Link to="/user" className="mt-auto">
+                <Link to="/user/login" className="mt-auto">
                   <Button className="w-full bg-wedding-blush text-wedding-navy hover:bg-wedding-blush/90">
                     Enter as Couple
                   </Button>
