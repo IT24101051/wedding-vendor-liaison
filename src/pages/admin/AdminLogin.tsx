@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +20,7 @@ const AdminLogin = () => {
   
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -32,40 +34,46 @@ const AdminLogin = () => {
     setError('');
     setIsLoading(true);
     
-    const success = await login(email, password, 'admin');
-    
-    setIsLoading(false);
-    if (success) {
-      navigate("/admin/dashboard");
-    } else {
-      setError("Invalid credentials. Try admin@example.com / admin123");
+    try {
+      const success = await login(email, password, 'admin');
+      
+      if (success) {
+        toast({
+          title: "Login successful",
+          description: "You've been logged in to your admin account",
+        });
+        navigate("/admin/dashboard");
+      } else {
+        setError("Invalid credentials. Try admin@example.com / admin123");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An error occurred during login. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-wedding-light py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-wedding-light p-4">
       <motion.div 
-        className="max-w-md w-full"
+        className="w-full max-w-md"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-wedding-navy">Admin Portal</h1>
+          <Link to="/" className="inline-flex items-center space-x-2">
+            <ArrowLeft className="h-8 w-8 text-wedding-navy" />
+            <span className="text-3xl font-display font-bold text-wedding-navy">Admin Portal</span>
+          </Link>
           <p className="mt-2 text-gray-600">Sign in to access the admin dashboard</p>
         </div>
         
         <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Administrator Login</CardTitle>
-              <Link to="/">
-                <Button variant="ghost" size="icon" className="text-wedding-navy">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-            <CardDescription>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">Administrator Login</CardTitle>
+            <CardDescription className="text-center">
               Please enter your credentials to continue
             </CardDescription>
           </CardHeader>
@@ -96,9 +104,9 @@ const AdminLogin = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <a href="#" className="text-sm text-wedding-gold hover:underline">
+                  <Link to="#" className="text-sm text-wedding-navy hover:underline">
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -124,10 +132,10 @@ const AdminLogin = () => {
           </CardContent>
         </Card>
         
-        <div className="mt-6 text-center text-sm">
-          <p className="text-gray-600">
-            This is a secured area. Unauthorized access is prohibited.
-          </p>
+        <div className="mt-8 text-center">
+          <Link to="/" className="text-sm text-gray-600 hover:text-wedding-navy">
+            Return to Wedding Vendor Liaison Home
+          </Link>
         </div>
       </motion.div>
     </div>
