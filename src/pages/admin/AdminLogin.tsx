@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -57,7 +57,14 @@ const AdminLogin = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Administrator Login</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Administrator Login</CardTitle>
+              <Link to="/">
+                <Button variant="ghost" size="icon" className="text-wedding-navy">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
             <CardDescription>
               Please enter your credentials to continue
             </CardDescription>
