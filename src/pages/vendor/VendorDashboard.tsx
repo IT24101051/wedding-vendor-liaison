@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import VendorLayout from "@/components/layouts/VendorLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,22 +10,18 @@ import { useBookings } from "@/contexts/BookingContext";
 import { useToast } from "@/hooks/use-toast";
 
 const VendorDashboard = () => {
-  // Get current vendor information
   const { user } = useAuth();
   const vendorId = user?.id || 'vendor1';
   
-  // Get bookings context with the refreshBookings function
   const { bookings, getBookingsByVendorId, refreshBookings } = useBookings();
   const { toast } = useToast();
   
-  // Set up state for dashboard data
   const [vendorBookings, setVendorBookings] = useState([]);
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [pendingBookings, setPendingBookings] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Create a memoized function to get vendor bookings
   const updateDashboardData = useCallback(() => {
     console.log("Updating dashboard data for vendor:", vendorId);
     const currentVendorBookings = getBookingsByVendorId(vendorId);
@@ -38,15 +33,12 @@ const VendorDashboard = () => {
     setPendingBookings(currentVendorBookings.filter(booking => booking.status === 'pending').length);
   }, [vendorId, getBookingsByVendorId]);
   
-  // Manual refresh function
   const handleRefresh = () => {
     setIsRefreshing(true);
     console.log("Manually refreshing bookings data...");
     
-    // First refresh bookings from localStorage
     refreshBookings();
     
-    // Short timeout to ensure the refresh has time to complete
     setTimeout(() => {
       updateDashboardData();
       setIsRefreshing(false);
@@ -57,22 +49,17 @@ const VendorDashboard = () => {
     }, 500);
   };
   
-  // Update dashboard data whenever bookings change
   useEffect(() => {
     console.log("Bookings changed, updating dashboard...");
     updateDashboardData();
   }, [bookings, updateDashboardData]);
   
-  // Update dashboard data on initial load
   useEffect(() => {
     console.log("Initial dashboard load...");
-    // First refresh from localStorage
     refreshBookings();
-    // Then update dashboard
     updateDashboardData();
   }, [updateDashboardData, refreshBookings]);
   
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -92,7 +79,6 @@ const VendorDashboard = () => {
     }
   };
 
-  // Dashboard stats with real data
   const dashboardStats = [
     { 
       title: "Total Bookings", 
@@ -122,7 +108,6 @@ const VendorDashboard = () => {
 
   return (
     <VendorLayout>
-      {/* Welcome Section */}
       <section className="py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
@@ -153,7 +138,6 @@ const VendorDashboard = () => {
         </div>
       </section>
 
-      {/* Dashboard Stats */}
       <motion.section 
         className="mb-8"
         variants={containerVariants}
@@ -180,7 +164,6 @@ const VendorDashboard = () => {
         </div>
       </motion.section>
 
-      {/* Recent Bookings */}
       <motion.section 
         className="mb-8"
         initial={{ opacity: 0, y: 20 }}
@@ -206,11 +189,10 @@ const VendorDashboard = () => {
                 </thead>
                 <tbody>
                   {vendorBookings.length > 0 ? (
-                    // Sort bookings by date descending to show newest first
                     vendorBookings
                       .slice()
                       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-                      .slice(0, 4) // Show only the 4 most recent bookings
+                      .slice(0, 4)
                       .map((booking) => (
                         <tr key={booking.id} className="border-b">
                           <td className="py-4 px-2">{booking.userName}</td>
@@ -260,7 +242,6 @@ const VendorDashboard = () => {
         </Card>
       </motion.section>
 
-      {/* Pending Tasks */}
       <motion.section 
         className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
         initial={{ opacity: 0, y: 20 }}

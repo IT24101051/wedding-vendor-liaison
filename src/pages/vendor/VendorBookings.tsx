@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import VendorLayout from '@/components/layouts/VendorLayout';
@@ -19,19 +18,19 @@ const VendorBookings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const loadBookings = async () => {
-    if (!currentUser || !currentUser.id) {
+    if (!user || !user.id) {
       console.error("Cannot load bookings: user not logged in or missing ID");
       setIsLoading(false);
       return;
     }
     
     try {
-      console.log(`Loading bookings for vendor ID: ${currentUser.id}`);
-      const vendorBookings = await JavaBackendService.getVendorBookings(currentUser.id);
+      console.log(`Loading bookings for vendor ID: ${user.id}`);
+      const vendorBookings = await JavaBackendService.getVendorBookings(user.id);
       
       console.log(`Loaded ${vendorBookings.length} bookings from Java backend:`, vendorBookings);
       setBookings(vendorBookings);
@@ -54,12 +53,10 @@ const VendorBookings = () => {
     }
   };
   
-  // Load bookings when component mounts
   useEffect(() => {
     loadBookings();
-  }, [currentUser]);
+  }, [user]);
   
-  // Filter bookings based on selection
   const applyFilter = (bookingsList: Booking[], filterValue: string) => {
     if (filterValue === 'all') {
       setFilteredBookings(bookingsList);
@@ -79,7 +76,6 @@ const VendorBookings = () => {
     try {
       await JavaBackendService.updateBooking(bookingId, { status: newStatus });
       
-      // Update local state
       const updatedBookings = bookings.map(booking => 
         booking.id === bookingId ? { ...booking, status: newStatus } : booking
       );
