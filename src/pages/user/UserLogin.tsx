@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Heart, User, AlertCircle } from "lucide-react";
+import { Heart, User, AlertCircle, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const UserLogin = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +20,7 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
   const from = location.state?.from?.pathname || "/user/payment/booking1";
 
@@ -36,6 +39,10 @@ const UserLogin = () => {
     
     setIsLoading(false);
     if (success) {
+      toast({
+        title: "Login successful",
+        description: "You've been logged in to your account",
+      });
       navigate(from);
     } else {
       setError("Invalid email or password. Try client@example.com / password");
@@ -52,7 +59,7 @@ const UserLogin = () => {
       >
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-wedding-gold" />
+            <ArrowLeft className="h-8 w-8 text-wedding-gold" />
             <span className="text-3xl font-display font-bold text-wedding-navy">Wedding Vendor Liaison</span>
           </Link>
           <p className="mt-2 text-gray-600">Sign in to manage your wedding services</p>
@@ -127,14 +134,9 @@ const UserLogin = () => {
         </Card>
         
         <div className="mt-8 text-center">
-          <div className="flex justify-center space-x-4">
-            <Link to="/vendor/login" className="text-sm text-gray-600 hover:text-wedding-navy">
-              Vendor Login
-            </Link>
-            <Link to="/admin/login" className="text-sm text-gray-600 hover:text-wedding-navy">
-              Admin Login
-            </Link>
-          </div>
+          <Link to="/" className="text-sm text-gray-600 hover:text-wedding-navy">
+            Return to Wedding Vendor Liaison Home
+          </Link>
         </div>
       </motion.div>
     </div>
