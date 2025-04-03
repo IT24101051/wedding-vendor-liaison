@@ -47,18 +47,40 @@ public class VendorBookingServlet extends HttpServlet {
                 // Get all bookings
                 List<Booking> allBookings = bookingSystem.getAllBookings();
                 out.print(gson.toJson(allBookings));
+                System.out.println("Returning all bookings: " + allBookings.size());
+            } else if (pathInfo.startsWith("/user/")) {
+                // Get bookings for a specific user
+                String userId = pathInfo.substring(6);
+                List<Booking> userBookings = bookingSystem.getUserBookings(userId);
+                out.print(gson.toJson(userBookings));
+                System.out.println("Found " + userBookings.size() + " bookings for user " + userId);
             } else {
-                // Get specific vendor bookings
-                String vendorId = pathInfo.substring(1);
-                
-                // Normalize vendor ID format (ensure it starts with "vendor")
-                if (!vendorId.startsWith("vendor")) {
-                    vendorId = "vendor" + vendorId;
+                // Check if it's a specific booking ID request
+                if (pathInfo.substring(1).startsWith("booking")) {
+                    // Get a specific booking
+                    String bookingId = pathInfo.substring(1);
+                    Booking booking = bookingSystem.getBookingById(bookingId);
+                    
+                    if (booking != null) {
+                        out.print(gson.toJson(booking));
+                        System.out.println("Found booking: " + bookingId);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        out.print(gson.toJson(new ErrorResponse("Booking not found: " + bookingId)));
+                    }
+                } else {
+                    // Get specific vendor bookings
+                    String vendorId = pathInfo.substring(1);
+                    
+                    // Normalize vendor ID format (ensure it starts with "vendor")
+                    if (!vendorId.startsWith("vendor")) {
+                        vendorId = "vendor" + vendorId;
+                    }
+                    
+                    List<Booking> vendorBookings = bookingSystem.getVendorBookings(vendorId);
+                    out.print(gson.toJson(vendorBookings));
+                    System.out.println("Found " + vendorBookings.size() + " bookings for vendor " + vendorId);
                 }
-                
-                List<Booking> vendorBookings = bookingSystem.getVendorBookings(vendorId);
-                out.print(gson.toJson(vendorBookings));
-                System.out.println("Found " + vendorBookings.size() + " bookings for vendor " + vendorId);
             }
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -137,6 +159,44 @@ public class VendorBookingServlet extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson(new ErrorResponse("Error updating booking: " + e.getMessage())));
+            e.printStackTrace();
+        }
+        out.flush();
+    }
+    
+    /**
+     * @see HttpServlet#doDelete(HttpServletRequest, HttpServletResponse)
+     */
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        String pathInfo = request.getPathInfo();
+        PrintWriter out = response.getWriter();
+        
+        try {
+            if (pathInfo == null || pathInfo.equals("/")) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(new ErrorResponse("Booking ID is required")));
+                return;
+            }
+            
+            String bookingId = pathInfo.substring(1);
+            
+            // Delete booking
+            boolean deleted = bookingSystem.deleteBooking(bookingId);
+            
+            if (deleted) {
+                out.print(gson.toJson(new SuccessResponse("Booking deleted successfully", bookingId)));
+                System.out.println("Deleted booking with ID: " + bookingId);
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.print(gson.toJson(new ErrorResponse("Booking not found with ID: " + bookingId)));
+            }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print(gson.toJson(new ErrorResponse("Error deleting booking: " + e.getMessage())));
             e.printStackTrace();
         }
         out.flush();

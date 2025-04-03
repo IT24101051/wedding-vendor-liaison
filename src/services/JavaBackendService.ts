@@ -35,6 +35,52 @@ export const JavaBackendService = {
   },
   
   /**
+   * Get user bookings
+   */
+  getUserBookings: async (userId: string): Promise<Booking[]> => {
+    try {
+      console.log(`Fetching bookings for user ${userId} from Java backend`);
+      
+      const response = await fetch(`${API_BASE_URL}/vendor/bookings/user/${userId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching user bookings: ${response.statusText}`);
+      }
+      
+      const bookings = await response.json();
+      
+      console.log(`Received ${bookings.length} bookings from Java backend for user ${userId}`);
+      return bookings;
+    } catch (error) {
+      console.error('Error in JavaBackendService.getUserBookings:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Get a specific booking by ID
+   */
+  getBookingById: async (bookingId: string): Promise<Booking> => {
+    try {
+      console.log(`Fetching booking ${bookingId} from Java backend`);
+      
+      const response = await fetch(`${API_BASE_URL}/vendor/bookings/${bookingId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching booking: ${response.statusText}`);
+      }
+      
+      const booking = await response.json();
+      
+      console.log(`Received booking from Java backend:`, booking);
+      return booking;
+    } catch (error) {
+      console.error('Error in JavaBackendService.getBookingById:', error);
+      throw error;
+    }
+  },
+  
+  /**
    * Create a new booking
    */
   createBooking: async (booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Promise<Booking> => {
@@ -106,6 +152,28 @@ export const JavaBackendService = {
       console.log(`Booking ${id} updated successfully`);
     } catch (error) {
       console.error('Error in JavaBackendService.updateBooking:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Delete a booking
+   */
+  deleteBooking: async (id: string): Promise<void> => {
+    try {
+      console.log(`Deleting booking ${id} via Java backend`);
+      
+      const response = await fetch(`${API_BASE_URL}/vendor/bookings/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error deleting booking: ${response.statusText}`);
+      }
+      
+      console.log(`Booking ${id} deleted successfully`);
+    } catch (error) {
+      console.error('Error in JavaBackendService.deleteBooking:', error);
       throw error;
     }
   },

@@ -99,6 +99,16 @@ public class BookingSystem {
     }
     
     /**
+     * Get a specific booking by ID
+     */
+    public Booking getBookingById(String bookingId) {
+        return bookings.stream()
+            .filter(booking -> booking.getId().equals(bookingId))
+            .findFirst()
+            .orElse(null);
+    }
+    
+    /**
      * Create a new booking
      */
     public String createBooking(Booking booking) {
