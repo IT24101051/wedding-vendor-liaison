@@ -1,8 +1,6 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
 const Index = () => {
@@ -29,19 +27,19 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-wedding-light">
+    <div className="min-vh-100 d-flex flex-column bg-light">
       {/* Blue Strap/Banner */}
-      <div className="bg-[#1EAEDB] py-3 text-white text-center shadow-md">
-        <div className="wedding-container">
-          <p className="font-medium">Our wedding services are now fully powered by a Java backend!</p>
+      <div className="bg-primary py-3 text-white text-center shadow">
+        <div className="container">
+          <p className="fw-medium mb-0">Our wedding services are now fully powered by a Java backend!</p>
         </div>
       </div>
       
       {/* Hero Section */}
-      <header className="py-16 bg-gradient-to-r from-wedding-blush to-white">
-        <div className="wedding-container text-center">
+      <header className="py-5 bg-gradient">
+        <div className="container text-center">
           <motion.h1 
-            className="text-5xl md:text-6xl font-bold text-wedding-navy mb-6"
+            className="display-4 fw-bold text-dark mb-4"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -49,7 +47,8 @@ const Index = () => {
             Wedding Vendor Liaison
           </motion.h1>
           <motion.p 
-            className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto"
+            className="fs-4 text-secondary mb-4 mx-auto"
+            style={{ maxWidth: "800px" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
@@ -61,93 +60,96 @@ const Index = () => {
 
       {/* Interface Selection */}
       <motion.section 
-        className="flex-grow py-16 wedding-container"
+        className="flex-grow-1 py-5 container"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <h2 className="text-3xl font-bold text-center mb-12 text-wedding-navy">Choose Your Interface</h2>
+        <h2 className="fs-1 fw-bold text-center mb-5 text-dark">Choose Your Interface</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="row g-4">
           {/* User Interface Card */}
-          <motion.div variants={itemVariants}>
-            <Card 
-              className={`h-full cursor-pointer transition-all ${
-                activeCard === 'user' ? 'ring-4 ring-[#1EAEDB]' : 'hover:shadow-xl'
+          <motion.div className="col-md-4" variants={itemVariants}>
+            <div 
+              className={`card h-100 ${
+                activeCard === 'user' ? 'border-primary border-3' : ''
               }`}
               onClick={() => setActiveCard('user')}
+              style={{ cursor: 'pointer' }}
             >
-              <CardContent className="p-6 flex flex-col h-full">
-                <h3 className="text-2xl font-semibold mb-4 text-wedding-navy">For Couples</h3>
-                <p className="text-gray-600 mb-6 flex-grow">
+              <div className="card-body d-flex flex-column p-4">
+                <h3 className="fs-4 fw-semibold mb-3 text-dark">For Couples</h3>
+                <p className="text-secondary mb-4 flex-grow-1">
                   Find and book the perfect vendors for your special day. Browse services, read reviews, and manage your wedding planning in one place.
                 </p>
                 <Link to="/user/login" className="mt-auto">
-                  <Button className="w-full bg-[#1EAEDB] text-white hover:bg-[#1EAEDB]/90">
+                  <button className="btn btn-primary w-100">
                     Enter as Couple
-                  </Button>
+                  </button>
                 </Link>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
 
           {/* Vendor Interface Card */}
-          <motion.div variants={itemVariants}>
-            <Card 
-              className={`h-full cursor-pointer transition-all ${
-                activeCard === 'vendor' ? 'ring-4 ring-[#1EAEDB]' : 'hover:shadow-xl'
+          <motion.div className="col-md-4" variants={itemVariants}>
+            <div 
+              className={`card h-100 ${
+                activeCard === 'vendor' ? 'border-primary border-3' : ''
               }`}
               onClick={() => setActiveCard('vendor')}
+              style={{ cursor: 'pointer' }}
             >
-              <CardContent className="p-6 flex flex-col h-full">
-                <h3 className="text-2xl font-semibold mb-4 text-wedding-navy">For Vendors</h3>
-                <p className="text-gray-600 mb-6 flex-grow">
+              <div className="card-body d-flex flex-column p-4">
+                <h3 className="fs-4 fw-semibold mb-3 text-dark">For Vendors</h3>
+                <p className="text-secondary mb-4 flex-grow-1">
                   Showcase your services to engaged couples. Manage your business profile, service offerings, and bookings efficiently.
                 </p>
-                <div className="flex flex-col space-y-3 mt-auto">
-                  <Link to="/vendor/login">
-                    <Button className="w-full bg-wedding-gold text-white hover:bg-wedding-gold/90">
+                <div className="d-flex flex-column gap-2 mt-auto">
+                  <Link to="/vendor/login" className="w-100">
+                    <button className="btn btn-warning text-white w-100">
                       Login as Vendor
-                    </Button>
+                    </button>
                   </Link>
-                  <Link to="/vendor/register">
-                    <Button variant="outline" className="w-full border-[#1EAEDB] text-[#1EAEDB]">
+                  <Link to="/vendor/register" className="w-100">
+                    <button className="btn btn-outline-primary w-100">
                       Register as Vendor
-                    </Button>
+                    </button>
                   </Link>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
 
           {/* Admin Interface Card */}
-          <motion.div variants={itemVariants}>
-            <Card 
-              className={`h-full cursor-pointer transition-all ${
-                activeCard === 'admin' ? 'ring-4 ring-[#1EAEDB]' : 'hover:shadow-xl'
+          <motion.div className="col-md-4" variants={itemVariants}>
+            <div 
+              className={`card h-100 ${
+                activeCard === 'admin' ? 'border-primary border-3' : ''
               }`}
               onClick={() => setActiveCard('admin')}
+              style={{ cursor: 'pointer' }}
             >
-              <CardContent className="p-6 flex flex-col h-full">
-                <h3 className="text-2xl font-semibold mb-4 text-wedding-navy">For Administrators</h3>
-                <p className="text-gray-600 mb-6 flex-grow">
+              <div className="card-body d-flex flex-column p-4">
+                <h3 className="fs-4 fw-semibold mb-3 text-dark">For Administrators</h3>
+                <p className="text-secondary mb-4 flex-grow-1">
                   Manage the entire platform. Approve vendors, oversee bookings, and ensure smooth operations of the wedding planning system.
                 </p>
                 <Link to="/admin/login" className="mt-auto">
-                  <Button className="w-full bg-[#1EAEDB] text-white hover:bg-[#1EAEDB]/90">
+                  <button className="btn btn-primary w-100">
                     Admin Access
-                  </Button>
+                  </button>
                 </Link>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         </div>
       </motion.section>
 
       {/* Footer */}
-      <footer className="py-8 bg-[#1EAEDB] text-white">
-        <div className="wedding-container text-center">
-          <p>© 2023 Wedding Vendor Liaison. All rights reserved.</p>
+      <footer className="py-4 bg-primary text-white">
+        <div className="container text-center">
+          <p className="mb-0">© 2023 Wedding Vendor Liaison. All rights reserved.</p>
         </div>
       </footer>
     </div>
