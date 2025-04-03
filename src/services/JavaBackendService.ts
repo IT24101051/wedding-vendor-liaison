@@ -5,7 +5,7 @@
 import { Booking } from '@/contexts/BookingContext';
 
 // Define the API URL
-const API_BASE_URL = '/api/vendor';
+const API_BASE_URL = '/api';
 
 export const JavaBackendService = {
   /**
@@ -18,7 +18,7 @@ export const JavaBackendService = {
       // Normalize vendor ID if needed
       const normalizedVendorId = vendorId.startsWith('vendor') ? vendorId : `vendor${vendorId}`;
       
-      const response = await fetch(`${API_BASE_URL}/bookings/${normalizedVendorId}`);
+      const response = await fetch(`${API_BASE_URL}/vendor/bookings/${normalizedVendorId}`);
       
       if (!response.ok) {
         throw new Error(`Error fetching vendor bookings: ${response.statusText}`);
@@ -47,7 +47,7 @@ export const JavaBackendService = {
         vendorId: booking.vendorId.startsWith('vendor') ? booking.vendorId : `vendor${booking.vendorId}`
       };
       
-      const response = await fetch(`${API_BASE_URL}/bookings/`, {
+      const response = await fetch(`${API_BASE_URL}/vendor/bookings/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -91,7 +91,7 @@ export const JavaBackendService = {
         ? { ...updates, vendorId: `vendor${updates.vendorId}` }
         : updates;
       
-      const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/vendor/bookings/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -107,6 +107,69 @@ export const JavaBackendService = {
     } catch (error) {
       console.error('Error in JavaBackendService.updateBooking:', error);
       throw error;
+    }
+  },
+  
+  /**
+   * Login a user
+   */
+  login: async (email: string, password: string, role: string): Promise<boolean> => {
+    try {
+      console.log(`Attempting to login user ${email} with role ${role}`);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password, role })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Login error: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log(`User ${email} logged in successfully as ${result.role}`);
+        return true;
+      } else {
+        console.log(`Login failed for user ${email}: ${result.message}`);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error in JavaBackendService.login:', error);
+      return false;
+    }
+  },
+  
+  /**
+   * Register a new user
+   */
+  register: async (name: string, email: string, password: string, role: string): Promise<boolean> => {
+    try {
+      console.log(`Registering new ${role}: ${name} (${email})`);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password, role })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Registration error: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      console.log(`Registration result:`, result);
+      
+      return true;
+    } catch (error) {
+      console.error('Error in JavaBackendService.register:', error);
+      return false;
     }
   }
 };

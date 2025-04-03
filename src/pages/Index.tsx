@@ -30,6 +30,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-wedding-light">
+      {/* Blue Strap/Banner */}
+      <div className="bg-[#1EAEDB] py-3 text-white text-center shadow-md">
+        <div className="wedding-container">
+          <p className="font-medium">Our wedding services are now fully powered by a Java backend!</p>
+        </div>
+      </div>
+      
       {/* Hero Section */}
       <header className="py-16 bg-gradient-to-r from-wedding-blush to-white">
         <div className="wedding-container text-center">
@@ -66,7 +73,7 @@ const Index = () => {
           <motion.div variants={itemVariants}>
             <Card 
               className={`h-full cursor-pointer transition-all ${
-                activeCard === 'user' ? 'ring-4 ring-wedding-gold' : 'hover:shadow-xl'
+                activeCard === 'user' ? 'ring-4 ring-[#1EAEDB]' : 'hover:shadow-xl'
               }`}
               onClick={() => setActiveCard('user')}
             >
@@ -76,7 +83,7 @@ const Index = () => {
                   Find and book the perfect vendors for your special day. Browse services, read reviews, and manage your wedding planning in one place.
                 </p>
                 <Link to="/user/login" className="mt-auto">
-                  <Button className="w-full bg-wedding-blush text-wedding-navy hover:bg-wedding-blush/90">
+                  <Button className="w-full bg-[#1EAEDB] text-white hover:bg-[#1EAEDB]/90">
                     Enter as Couple
                   </Button>
                 </Link>
@@ -88,7 +95,7 @@ const Index = () => {
           <motion.div variants={itemVariants}>
             <Card 
               className={`h-full cursor-pointer transition-all ${
-                activeCard === 'vendor' ? 'ring-4 ring-wedding-gold' : 'hover:shadow-xl'
+                activeCard === 'vendor' ? 'ring-4 ring-[#1EAEDB]' : 'hover:shadow-xl'
               }`}
               onClick={() => setActiveCard('vendor')}
             >
@@ -104,7 +111,7 @@ const Index = () => {
                     </Button>
                   </Link>
                   <Link to="/vendor/register">
-                    <Button variant="outline" className="w-full border-wedding-gold text-wedding-navy">
+                    <Button variant="outline" className="w-full border-[#1EAEDB] text-[#1EAEDB]">
                       Register as Vendor
                     </Button>
                   </Link>
@@ -117,7 +124,7 @@ const Index = () => {
           <motion.div variants={itemVariants}>
             <Card 
               className={`h-full cursor-pointer transition-all ${
-                activeCard === 'admin' ? 'ring-4 ring-wedding-gold' : 'hover:shadow-xl'
+                activeCard === 'admin' ? 'ring-4 ring-[#1EAEDB]' : 'hover:shadow-xl'
               }`}
               onClick={() => setActiveCard('admin')}
             >
@@ -127,7 +134,7 @@ const Index = () => {
                   Manage the entire platform. Approve vendors, oversee bookings, and ensure smooth operations of the wedding planning system.
                 </p>
                 <Link to="/admin/login" className="mt-auto">
-                  <Button className="w-full bg-wedding-navy text-white hover:bg-wedding-navy/90">
+                  <Button className="w-full bg-[#1EAEDB] text-white hover:bg-[#1EAEDB]/90">
                     Admin Access
                   </Button>
                 </Link>
@@ -138,7 +145,7 @@ const Index = () => {
       </motion.section>
 
       {/* Footer */}
-      <footer className="py-8 bg-wedding-navy text-white">
+      <footer className="py-8 bg-[#1EAEDB] text-white">
         <div className="wedding-container text-center">
           <p>© 2023 Wedding Vendor Liaison. All rights reserved.</p>
         </div>
