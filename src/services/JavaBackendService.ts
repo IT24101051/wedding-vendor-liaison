@@ -4,7 +4,7 @@
  */
 import { Booking } from '@/contexts/BookingContext';
 
-// Define the API URL
+// Define the API URL for the Java backend
 const API_BASE_URL = '/api';
 
 export const JavaBackendService = {
@@ -126,7 +126,8 @@ export const JavaBackendService = {
       });
       
       if (!response.ok) {
-        throw new Error(`Login error: ${response.statusText}`);
+        console.error(`Login error: ${response.statusText}`);
+        return false;
       }
       
       const result = await response.json();
@@ -160,7 +161,8 @@ export const JavaBackendService = {
       });
       
       if (!response.ok) {
-        throw new Error(`Registration error: ${response.statusText}`);
+        console.error(`Registration error: ${response.statusText}`);
+        return false;
       }
       
       const result = await response.json();
