@@ -31,9 +31,11 @@ const MOCK_USERS = {
   admin: { id: 'admin1', name: 'Admin User', email: 'admin@example.com', password: 'admin123', type: 'admin' as UserType }
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Use useToast only inside the component body
   const { toast } = useToast();
 
   // Check for existing session on load
