@@ -1,6 +1,7 @@
 
 package com.weddingvendor.backend;
 
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -9,14 +10,28 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * In-memory booking system for the Wedding Vendor application
+ * File-based booking system for the Wedding Vendor application
  */
 public class BookingSystem {
-    private static final List<Booking> bookings = new ArrayList<>();
+    private static List<Booking> bookings = new ArrayList<>();
     private static final DateTimeFormatter ISO_FORMAT = DateTimeFormatter.ISO_DATE_TIME;
+    private static final String DATA_FILE = "bookings.dat";
+    private static boolean isInitialized = false;
     
-    // Initialize with some sample data
+    // Initialize with sample data or load from file
     static {
+        loadFromFile();
+        
+        // If no data was loaded, initialize with sample data
+        if (bookings.isEmpty()) {
+            initializeSampleData();
+        }
+    }
+    
+    /**
+     * Initialize with some sample data
+     */
+    private static void initializeSampleData() {
         // Sample booking 1
         Booking booking1 = new Booking();
         booking1.setId("booking1");
@@ -71,6 +86,52 @@ public class BookingSystem {
         bookings.add(booking1);
         bookings.add(booking2);
         bookings.add(booking3);
+        
+        // Save the initial data to file
+        saveToFile();
+    }
+    
+    /**
+     * Load bookings from file
+     */
+    @SuppressWarnings("unchecked")
+    private static void loadFromFile() {
+        File file = new File(DATA_FILE);
+        
+        if (file.exists()) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                // Read the list of bookings from the file
+                bookings = (List<Booking>) ois.readObject();
+                System.out.println("Loaded " + bookings.size() + " bookings from file");
+                isInitialized = true;
+            } catch (IOException | ClassNotFoundException e) {
+                System.err.println("Error loading bookings from file: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * Save bookings to file
+     */
+    private static void saveToFile() {
+        try {
+            // Ensure the data directory exists
+            File dataDir = new File("data");
+            if (!dataDir.exists()) {
+                dataDir.mkdir();
+            }
+            
+            File file = new File(DATA_FILE);
+            
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                oos.writeObject(bookings);
+                System.out.println("Saved " + bookings.size() + " bookings to file");
+            }
+        } catch (IOException e) {
+            System.err.println("Error saving bookings to file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -125,6 +186,9 @@ public class BookingSystem {
         // Add to collection
         bookings.add(booking);
         
+        // Save changes to file
+        saveToFile();
+        
         return booking.getId();
     }
     
@@ -152,6 +216,9 @@ public class BookingSystem {
                 // Always update the updatedAt timestamp
                 booking.setUpdatedAt(LocalDateTime.now().format(ISO_FORMAT));
                 
+                // Save changes to file
+                saveToFile();
+                
                 return true;
             }
         }
@@ -163,6 +230,13 @@ public class BookingSystem {
      * Delete a booking
      */
     public boolean deleteBooking(String bookingId) {
-        return bookings.removeIf(booking -> booking.getId().equals(bookingId));
+        boolean removed = bookings.removeIf(booking -> booking.getId().equals(bookingId));
+        
+        if (removed) {
+            // Save changes to file
+            saveToFile();
+        }
+        
+        return removed;
     }
 }

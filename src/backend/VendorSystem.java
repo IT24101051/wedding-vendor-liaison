@@ -1,17 +1,31 @@
-
 package com.weddingvendor.backend;
 
+import java.io.*;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * System to manage vendors using the custom LinkedList implementation
+ * System to manage vendors using the custom LinkedList implementation with file persistence
  */
 public class VendorSystem {
-    private static final VendorLinkedList vendors = new VendorLinkedList();
+    private static VendorLinkedList vendors = new VendorLinkedList();
+    private static final String DATA_FILE = "vendors.dat";
+    private static boolean isInitialized = false;
     
-    // Initialize with sample data
+    // Initialize with sample data or load from file
     static {
+        loadFromFile();
+        
+        // If no data was loaded, initialize with sample data
+        if (vendors.isEmpty()) {
+            initializeSampleData();
+        }
+    }
+    
+    /**
+     * Initialize the system with sample vendor data
+     */
+    private static void initializeSampleData() {
         // Create vendors with sample data
         Vendor vendor1 = new Vendor(
             "vendor1",
@@ -115,6 +129,63 @@ public class VendorSystem {
         vendors.add(vendor4);
         vendors.add(vendor5);
         vendors.add(vendor6);
+        
+        // Save the initial data to file
+        saveToFile();
+    }
+    
+    /**
+     * Load vendors from file
+     */
+    @SuppressWarnings("unchecked")
+    private static void loadFromFile() {
+        File file = new File(DATA_FILE);
+        
+        if (file.exists()) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                // Read the list of vendors from the file
+                List<Vendor> vendorList = (List<Vendor>) ois.readObject();
+                
+                // Clear the current list
+                vendors = new VendorLinkedList();
+                
+                // Add all vendors to the LinkedList
+                for (Vendor vendor : vendorList) {
+                    vendors.add(vendor);
+                }
+                
+                System.out.println("Loaded " + vendorList.size() + " vendors from file");
+                isInitialized = true;
+            } catch (IOException | ClassNotFoundException e) {
+                System.err.println("Error loading vendors from file: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * Save vendors to file
+     */
+    private static void saveToFile() {
+        try {
+            // Ensure the data directory exists
+            File dataDir = new File("data");
+            if (!dataDir.exists()) {
+                dataDir.mkdir();
+            }
+            
+            File file = new File(DATA_FILE);
+            
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                // Convert LinkedList to regular list for serialization
+                List<Vendor> vendorList = vendors.toList();
+                oos.writeObject(vendorList);
+                System.out.println("Saved " + vendorList.size() + " vendors to file");
+            }
+        } catch (IOException e) {
+            System.err.println("Error saving vendors to file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -139,6 +210,7 @@ public class VendorSystem {
             vendor.setId("vendor" + UUID.randomUUID().toString().substring(0, 8));
         }
         vendors.add(vendor);
+        saveToFile();
         return vendor.getId();
     }
     
@@ -146,14 +218,22 @@ public class VendorSystem {
      * Update a vendor
      */
     public boolean updateVendor(String id, Vendor vendor) {
-        return vendors.updateById(id, vendor);
+        boolean updated = vendors.updateById(id, vendor);
+        if (updated) {
+            saveToFile();
+        }
+        return updated;
     }
     
     /**
      * Delete a vendor
      */
     public boolean deleteVendor(String id) {
-        return vendors.removeById(id);
+        boolean removed = vendors.removeById(id);
+        if (removed) {
+            saveToFile();
+        }
+        return removed;
     }
     
     /**
