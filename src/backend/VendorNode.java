@@ -50,7 +50,7 @@ public class VendorNode implements Serializable {
      * @return true if this node's vendor ID matches the given ID
      */
     public boolean hasId(String id) {
-        if (data == null) {
+        if (data == null || id == null) {
             return false;
         }
         

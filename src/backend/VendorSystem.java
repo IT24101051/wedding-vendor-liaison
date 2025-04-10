@@ -1,4 +1,3 @@
-
 package com.weddingvendor.backend;
 
 import java.io.*;
@@ -17,11 +16,15 @@ public class VendorSystem {
     // Initialize with sample data or load from file
     public VendorSystem() {
         if (!isInitialized) {
-            loadFromFile();
+            System.out.println("Initializing VendorSystem...");
+            boolean loaded = loadFromFile();
             
             // If no data was loaded, initialize with sample data
-            if (vendors.isEmpty()) {
+            if (!loaded || vendors.isEmpty()) {
+                System.out.println("No vendor data found, initializing with sample data");
                 initializeSampleData();
+            } else {
+                System.out.println("Successfully loaded vendor data from file");
             }
             
             isInitialized = true;
@@ -147,7 +150,7 @@ public class VendorSystem {
      * Load vendors from file
      */
     @SuppressWarnings("unchecked")
-    private static void loadFromFile() {
+    private static boolean loadFromFile() {
         System.out.println("Attempting to load vendors from file: " + DATA_FILE);
         
         // Create data directory if it doesn't exist
@@ -158,6 +161,7 @@ public class VendorSystem {
                 System.out.println("Created data directory");
             } else {
                 System.err.println("Failed to create data directory");
+                return false;
             }
         }
         
@@ -177,15 +181,17 @@ public class VendorSystem {
                 }
                 
                 System.out.println("Loaded " + vendorList.size() + " vendors from file: " + file.getAbsolutePath());
-                isInitialized = true;
+                return true;
             } catch (IOException | ClassNotFoundException e) {
                 System.err.println("Error loading vendors from file: " + e.getMessage());
                 e.printStackTrace();
                 // If there's an error, initialize with sample data
                 vendors = new VendorLinkedList();
+                return false;
             }
         } else {
             System.out.println("Vendors data file does not exist or is empty, will create with sample data");
+            return false;
         }
     }
     
@@ -222,7 +228,9 @@ public class VendorSystem {
      * Get all vendors
      */
     public List<Vendor> getAllVendors() {
-        return vendors.toList();
+        List<Vendor> result = vendors.toList();
+        System.out.println("getAllVendors: Retrieved " + result.size() + " vendors");
+        return result;
     }
     
     /**

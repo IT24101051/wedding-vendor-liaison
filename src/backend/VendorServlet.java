@@ -1,4 +1,3 @@
-
 package com.weddingvendor.backend;
 
 import java.io.IOException;
@@ -28,6 +27,7 @@ public class VendorServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // Ensure we set the content type before doing anything else
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         
@@ -37,7 +37,7 @@ public class VendorServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         
         try {
-            System.out.println("Received GET request for vendors: " + pathInfo);
+            System.out.println("Processing vendor request with pathInfo: " + pathInfo);
             
             if (pathInfo == null || pathInfo.equals("/")) {
                 // Get all vendors or apply sorting/filtering
@@ -47,6 +47,8 @@ public class VendorServlet extends HttpServlet {
                 String search = request.getParameter("search");
                 
                 List<Vendor> vendorList;
+                System.out.println("Request parameters - sortBy: " + sortBy + ", category: " + category + 
+                                  ", location: " + location + ", search: " + search);
                 
                 if (search != null && !search.isEmpty()) {
                     vendorList = vendorSystem.searchVendors(search);
@@ -73,22 +75,27 @@ public class VendorServlet extends HttpServlet {
                             break;
                         default:
                             vendorList = vendorSystem.getAllVendors();
-                            System.out.println("Getting all vendors, found: " + vendorList.size());
+                            System.out.println("Getting all vendors (default sort), found: " + vendorList.size());
                     }
                 } else {
                     vendorList = vendorSystem.getAllVendors();
-                    System.out.println("Getting all vendors, found: " + vendorList.size());
+                    System.out.println("Getting all vendors (no filters), found: " + vendorList.size());
                 }
                 
+                String jsonResponse = gson.toJson(vendorList);
                 System.out.println("Returning JSON response with " + vendorList.size() + " vendors");
-                out.print(gson.toJson(vendorList));
+                System.out.println("Sample of response: " + (jsonResponse.length() > 100 ? 
+                                                           jsonResponse.substring(0, 100) + "..." : jsonResponse));
+                out.print(jsonResponse);
             } else {
                 // Get vendor by ID
                 String vendorId = pathInfo.substring(1);
+                System.out.println("Fetching vendor by ID: " + vendorId);
+                
                 Vendor vendor = vendorSystem.getVendorById(vendorId);
                 
                 if (vendor != null) {
-                    System.out.println("Found vendor by ID: " + vendorId);
+                    System.out.println("Found vendor by ID: " + vendorId + " - " + vendor.getName());
                     out.print(gson.toJson(vendor));
                 } else {
                     System.out.println("Vendor not found with ID: " + vendorId);
@@ -102,6 +109,9 @@ public class VendorServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson(new ErrorResponse("Internal server error: " + e.getMessage())));
         }
+        
+        // Ensure the response is flushed
+        out.flush();
     }
     
     /**

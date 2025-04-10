@@ -41,10 +41,8 @@ export interface Service {
   duration: string;
 }
 
-// Base URL for API calls
 const API_BASE_URL = '/api';
 
-// Mock data to use when API calls fail (for development/demo purposes)
 const mockVendors = [
   {
     id: "vendor1",
@@ -108,7 +106,6 @@ const mockVendors = [
  * Service to interact with Java backend APIs
  */
 class JavaBackendService {
-  // Authentication methods
   async login(email: string, password: string, userType: 'user' | 'vendor' | 'admin') {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -159,7 +156,6 @@ class JavaBackendService {
     }
   }
 
-  // Booking methods
   async getAllBookings(): Promise<Booking[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/bookings`);
@@ -318,7 +314,6 @@ class JavaBackendService {
     }
   }
 
-  // Vendor methods - updated with better error handling and mock data fallback
   async getAllVendors(): Promise<Vendor[]> {
     try {
       console.log("Fetching all vendors from backend");
@@ -330,10 +325,10 @@ class JavaBackendService {
         throw new Error(`Failed to fetch vendors: ${response.status} ${response.statusText}`);
       }
       
-      // Check if response is JSON by looking at content-type header
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         console.error('Response is not JSON, received content type:', contentType);
+        console.log('Response body preview:', await response.text().then(text => text.substring(0, 200) + '...'));
         console.log('Falling back to mock data due to invalid response format');
         return mockVendors;
       }
@@ -344,12 +339,11 @@ class JavaBackendService {
     } catch (error) {
       console.error('Error fetching all vendors:', error);
       
-      // For development/demo purposes, return mock data when the API fails
       console.log('Falling back to mock vendor data due to API error');
       
       toast({
         title: "Vendor Data Notice",
-        description: "Using sample vendor data. The backend server may not be available.",
+        description: "Using sample vendor data. Backend server connection issue.",
         variant: "default",
       });
       
@@ -380,37 +374,49 @@ class JavaBackendService {
   async getVendorsSortedByPrice(ascending: boolean = true): Promise<Vendor[]> {
     try {
       const sortParam = ascending ? 'priceAsc' : 'priceDesc';
+      console.log(`Fetching vendors sorted by price (${ascending ? 'ascending' : 'descending'})`);
       const response = await fetch(`${API_BASE_URL}/vendors?sortBy=${sortParam}`);
       
       if (!response.ok) {
+        console.error(`Failed to fetch sorted vendors: ${response.status} ${response.statusText}`);
         throw new Error('Failed to fetch sorted vendors');
       }
       
-      // Check content type
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         console.error('Response is not JSON, received content type:', contentType);
         console.log('Falling back to mock data due to invalid response format');
         
-        // Sort mock data locally
-        return [...mockVendors].sort((a, b) => 
+        const sortedMockVendors = [...mockVendors].sort((a, b) => 
           ascending ? a.minPrice - b.minPrice : b.minPrice - a.minPrice
         );
+        
+        toast({
+          title: "Data Notice",
+          description: "Using sample vendor data for sorting. Backend connection issue.",
+          variant: "default",
+        });
+        
+        return sortedMockVendors;
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log(`Successfully fetched ${data.length} sorted vendors`);
+      return data;
     } catch (error) {
       console.error('Error fetching sorted vendors:', error);
+      
+      const sortedMockVendors = [...mockVendors].sort((a, b) => 
+        ascending ? a.minPrice - b.minPrice : b.minPrice - a.minPrice
+      );
+      
       toast({
         title: "Data Notice",
-        description: "Using sample vendor data for sorting. The backend server may not be available.",
+        description: "Using sample vendor data for sorting. Backend connection issue.",
         variant: "default",
       });
       
-      // Sort mock data locally
-      return [...mockVendors].sort((a, b) => 
-        ascending ? a.minPrice - b.minPrice : b.minPrice - a.minPrice
-      );
+      return sortedMockVendors;
     }
   }
 
