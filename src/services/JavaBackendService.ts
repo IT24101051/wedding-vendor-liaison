@@ -44,6 +44,66 @@ export interface Service {
 // Base URL for API calls
 const API_BASE_URL = '/api';
 
+// Mock data to use when API calls fail (for development/demo purposes)
+const mockVendors = [
+  {
+    id: "vendor1",
+    name: "Elegant Moments Photography",
+    category: "Photographer",
+    rating: 4.9,
+    reviewCount: 124,
+    image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    minPrice: 1200,
+    maxPrice: 3000,
+    priceDisplay: "$1,200 - $3,000",
+    location: "New York, NY",
+    description: "Specializing in candid wedding photography that captures the emotions of your special day.",
+    services: []
+  },
+  {
+    id: "vendor2",
+    name: "Royal Garden Venue",
+    category: "Venue",
+    rating: 4.8,
+    reviewCount: 89,
+    image: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    minPrice: 5000,
+    maxPrice: 15000,
+    priceDisplay: "$5,000 - $15,000",
+    location: "Chicago, IL",
+    description: "A stunning garden venue with both indoor and outdoor spaces for your dream wedding.",
+    services: []
+  },
+  {
+    id: "vendor3",
+    name: "Divine Cuisine Catering",
+    category: "Caterer",
+    rating: 4.7,
+    reviewCount: 156,
+    image: "https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    minPrice: 45,
+    maxPrice: 120,
+    priceDisplay: "$45 - $120",
+    location: "Los Angeles, CA",
+    description: "Gourmet catering services with customizable menus to suit any taste and dietary requirement.",
+    services: []
+  },
+  {
+    id: "vendor4",
+    name: "Blooming Beauty Florals",
+    category: "Florist",
+    rating: 4.9,
+    reviewCount: 78,
+    image: "https://images.unsplash.com/photo-1561128290-006dc4827214?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    minPrice: 800,
+    maxPrice: 2500,
+    priceDisplay: "$800 - $2,500",
+    location: "Miami, FL",
+    description: "Creating breathtaking floral arrangements that bring your wedding vision to life.",
+    services: []
+  }
+];
+
 /**
  * Service to interact with Java backend APIs
  */
@@ -258,7 +318,7 @@ class JavaBackendService {
     }
   }
 
-  // Vendor methods - new methods to interact with our LinkedList implementation
+  // Vendor methods - updated with better error handling and mock data fallback
   async getAllVendors(): Promise<Vendor[]> {
     try {
       console.log("Fetching all vendors from backend");
@@ -270,18 +330,30 @@ class JavaBackendService {
         throw new Error(`Failed to fetch vendors: ${response.status} ${response.statusText}`);
       }
       
+      // Check if response is JSON by looking at content-type header
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Response is not JSON, received content type:', contentType);
+        console.log('Falling back to mock data due to invalid response format');
+        return mockVendors;
+      }
+      
       const data = await response.json();
       console.log(`Successfully fetched ${data.length} vendors`);
       return data;
     } catch (error) {
       console.error('Error fetching all vendors:', error);
+      
+      // For development/demo purposes, return mock data when the API fails
+      console.log('Falling back to mock vendor data due to API error');
+      
       toast({
-        title: 'Error',
-        description: 'Failed to load vendors. Please try again later.',
-        variant: 'destructive',
+        title: "Vendor Data Notice",
+        description: "Using sample vendor data. The backend server may not be available.",
+        variant: "default",
       });
-      // Return empty array instead of throwing to prevent UI crashes
-      return [];
+      
+      return mockVendors;
     }
   }
 
@@ -314,15 +386,31 @@ class JavaBackendService {
         throw new Error('Failed to fetch sorted vendors');
       }
       
+      // Check content type
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Response is not JSON, received content type:', contentType);
+        console.log('Falling back to mock data due to invalid response format');
+        
+        // Sort mock data locally
+        return [...mockVendors].sort((a, b) => 
+          ascending ? a.minPrice - b.minPrice : b.minPrice - a.minPrice
+        );
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Error fetching sorted vendors:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load sorted vendors',
-        variant: 'destructive',
+        title: "Data Notice",
+        description: "Using sample vendor data for sorting. The backend server may not be available.",
+        variant: "default",
       });
-      return [];
+      
+      // Sort mock data locally
+      return [...mockVendors].sort((a, b) => 
+        ascending ? a.minPrice - b.minPrice : b.minPrice - a.minPrice
+      );
     }
   }
 

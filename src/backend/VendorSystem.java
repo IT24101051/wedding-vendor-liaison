@@ -2,6 +2,7 @@
 package com.weddingvendor.backend;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,12 +15,16 @@ public class VendorSystem {
     private static boolean isInitialized = false;
     
     // Initialize with sample data or load from file
-    static {
-        loadFromFile();
-        
-        // If no data was loaded, initialize with sample data
-        if (vendors.isEmpty()) {
-            initializeSampleData();
+    public VendorSystem() {
+        if (!isInitialized) {
+            loadFromFile();
+            
+            // If no data was loaded, initialize with sample data
+            if (vendors.isEmpty()) {
+                initializeSampleData();
+            }
+            
+            isInitialized = true;
         }
     }
     
@@ -27,6 +32,7 @@ public class VendorSystem {
      * Initialize the system with sample vendor data
      */
     private static void initializeSampleData() {
+        System.out.println("Initializing vendor system with sample data");
         // Create vendors with sample data
         Vendor vendor1 = new Vendor(
             "vendor1",
@@ -131,6 +137,8 @@ public class VendorSystem {
         vendors.add(vendor5);
         vendors.add(vendor6);
         
+        System.out.println("Added " + vendors.size() + " sample vendors");
+        
         // Save the initial data to file
         saveToFile();
     }
@@ -140,6 +148,8 @@ public class VendorSystem {
      */
     @SuppressWarnings("unchecked")
     private static void loadFromFile() {
+        System.out.println("Attempting to load vendors from file: " + DATA_FILE);
+        
         // Create data directory if it doesn't exist
         File dataDir = new File("data");
         if (!dataDir.exists()) {

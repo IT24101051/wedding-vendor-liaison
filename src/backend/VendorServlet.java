@@ -1,3 +1,4 @@
+
 package com.weddingvendor.backend;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ import com.google.gson.GsonBuilder;
 /**
  * Servlet to handle vendor-related operations
  */
-@WebServlet("/api/vendors/*")
+@WebServlet(urlPatterns = {"/api/vendors", "/api/vendors/*"})
 public class VendorServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final VendorSystem vendorSystem = new VendorSystem();
@@ -29,6 +30,8 @@ public class VendorServlet extends HttpServlet {
         
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+        
+        System.out.println("VendorServlet: Received GET request to path: " + request.getRequestURI());
         
         String pathInfo = request.getPathInfo();
         PrintWriter out = response.getWriter();
@@ -77,6 +80,7 @@ public class VendorServlet extends HttpServlet {
                     System.out.println("Getting all vendors, found: " + vendorList.size());
                 }
                 
+                System.out.println("Returning JSON response with " + vendorList.size() + " vendors");
                 out.print(gson.toJson(vendorList));
             } else {
                 // Get vendor by ID

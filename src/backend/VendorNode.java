@@ -50,10 +50,24 @@ public class VendorNode implements Serializable {
      * @return true if this node's vendor ID matches the given ID
      */
     public boolean hasId(String id) {
-        if (data == null || data.getId() == null) {
+        if (data == null) {
             return false;
         }
-        return data.getId().equals(id);
+        
+        String vendorId = data.getId();
+        if (vendorId == null) {
+            return false;
+        }
+        
+        return vendorId.equals(id);
+    }
+    
+    /**
+     * Check if the node has valid data
+     * @return true if the node has valid vendor data
+     */
+    public boolean hasValidData() {
+        return data != null && data.getId() != null && !data.getId().isEmpty();
     }
     
     @Override
