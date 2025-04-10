@@ -1,4 +1,3 @@
-
 import { toast } from '@/components/ui/use-toast';
 
 export interface Booking {
@@ -262,20 +261,26 @@ class JavaBackendService {
   // Vendor methods - new methods to interact with our LinkedList implementation
   async getAllVendors(): Promise<Vendor[]> {
     try {
+      console.log("Fetching all vendors from backend");
       const response = await fetch(`${API_BASE_URL}/vendors`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch vendors');
+        const errorText = await response.text();
+        console.error(`Failed to fetch vendors: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Failed to fetch vendors: ${response.status} ${response.statusText}`);
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log(`Successfully fetched ${data.length} vendors`);
+      return data;
     } catch (error) {
       console.error('Error fetching all vendors:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load vendors',
+        description: 'Failed to load vendors. Please try again later.',
         variant: 'destructive',
       });
+      // Return empty array instead of throwing to prevent UI crashes
       return [];
     }
   }

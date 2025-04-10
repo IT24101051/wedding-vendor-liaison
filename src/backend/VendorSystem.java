@@ -1,3 +1,4 @@
+
 package com.weddingvendor.backend;
 
 import java.io.*;
@@ -9,7 +10,7 @@ import java.util.UUID;
  */
 public class VendorSystem {
     private static VendorLinkedList vendors = new VendorLinkedList();
-    private static final String DATA_FILE = "vendors.dat";
+    private static final String DATA_FILE = "data/vendors.dat";
     private static boolean isInitialized = false;
     
     // Initialize with sample data or load from file
@@ -159,6 +160,14 @@ public class VendorSystem {
             } catch (IOException | ClassNotFoundException e) {
                 System.err.println("Error loading vendors from file: " + e.getMessage());
                 e.printStackTrace();
+                // If there's an error, initialize with sample data
+                vendors = new VendorLinkedList();
+            }
+        } else {
+            // Ensure directories exist
+            File dataDir = new File("data");
+            if (!dataDir.exists()) {
+                dataDir.mkdir();
             }
         }
     }
