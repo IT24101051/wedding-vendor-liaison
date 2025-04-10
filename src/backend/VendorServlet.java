@@ -1,4 +1,3 @@
-
 package com.weddingvendor.backend;
 
 import java.io.IOException;
@@ -35,6 +34,8 @@ public class VendorServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         
         try {
+            System.out.println("Received GET request for vendors: " + pathInfo);
+            
             if (pathInfo == null || pathInfo.equals("/")) {
                 // Get all vendors or apply sorting/filtering
                 String sortBy = request.getParameter("sortBy");
@@ -46,26 +47,34 @@ public class VendorServlet extends HttpServlet {
                 
                 if (search != null && !search.isEmpty()) {
                     vendorList = vendorSystem.searchVendors(search);
+                    System.out.println("Searching vendors with query: " + search + ", found: " + vendorList.size());
                 } else if (category != null && !category.equals("all")) {
                     vendorList = vendorSystem.getVendorsByCategory(category);
+                    System.out.println("Filtering vendors by category: " + category + ", found: " + vendorList.size());
                 } else if (location != null && !location.equals("all")) {
                     vendorList = vendorSystem.getVendorsByLocation(location);
+                    System.out.println("Filtering vendors by location: " + location + ", found: " + vendorList.size());
                 } else if (sortBy != null) {
                     switch (sortBy) {
                         case "priceAsc":
                             vendorList = vendorSystem.getVendorsSortedByPrice();
+                            System.out.println("Sorted vendors by price (ascending), found: " + vendorList.size());
                             break;
                         case "priceDesc":
                             vendorList = vendorSystem.getVendorsSortedByPriceDesc();
+                            System.out.println("Sorted vendors by price (descending), found: " + vendorList.size());
                             break;
                         case "rating":
                             vendorList = vendorSystem.getVendorsSortedByRating();
+                            System.out.println("Sorted vendors by rating, found: " + vendorList.size());
                             break;
                         default:
                             vendorList = vendorSystem.getAllVendors();
+                            System.out.println("Getting all vendors, found: " + vendorList.size());
                     }
                 } else {
                     vendorList = vendorSystem.getAllVendors();
+                    System.out.println("Getting all vendors, found: " + vendorList.size());
                 }
                 
                 out.print(gson.toJson(vendorList));
@@ -75,13 +84,17 @@ public class VendorServlet extends HttpServlet {
                 Vendor vendor = vendorSystem.getVendorById(vendorId);
                 
                 if (vendor != null) {
+                    System.out.println("Found vendor by ID: " + vendorId);
                     out.print(gson.toJson(vendor));
                 } else {
+                    System.out.println("Vendor not found with ID: " + vendorId);
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     out.print(gson.toJson(new ErrorResponse("Vendor not found")));
                 }
             }
         } catch (Exception e) {
+            System.err.println("Error in vendor servlet: " + e.getMessage());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson(new ErrorResponse("Internal server error: " + e.getMessage())));
         }

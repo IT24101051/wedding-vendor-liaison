@@ -140,9 +140,20 @@ public class VendorSystem {
      */
     @SuppressWarnings("unchecked")
     private static void loadFromFile() {
+        // Create data directory if it doesn't exist
+        File dataDir = new File("data");
+        if (!dataDir.exists()) {
+            boolean created = dataDir.mkdir();
+            if (created) {
+                System.out.println("Created data directory");
+            } else {
+                System.err.println("Failed to create data directory");
+            }
+        }
+        
         File file = new File(DATA_FILE);
         
-        if (file.exists()) {
+        if (file.exists() && file.length() > 0) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                 // Read the list of vendors from the file
                 List<Vendor> vendorList = (List<Vendor>) ois.readObject();
@@ -155,7 +166,7 @@ public class VendorSystem {
                     vendors.add(vendor);
                 }
                 
-                System.out.println("Loaded " + vendorList.size() + " vendors from file");
+                System.out.println("Loaded " + vendorList.size() + " vendors from file: " + file.getAbsolutePath());
                 isInitialized = true;
             } catch (IOException | ClassNotFoundException e) {
                 System.err.println("Error loading vendors from file: " + e.getMessage());
@@ -164,11 +175,7 @@ public class VendorSystem {
                 vendors = new VendorLinkedList();
             }
         } else {
-            // Ensure directories exist
-            File dataDir = new File("data");
-            if (!dataDir.exists()) {
-                dataDir.mkdir();
-            }
+            System.out.println("Vendors data file does not exist or is empty, will create with sample data");
         }
     }
     
@@ -180,7 +187,11 @@ public class VendorSystem {
             // Ensure the data directory exists
             File dataDir = new File("data");
             if (!dataDir.exists()) {
-                dataDir.mkdir();
+                boolean created = dataDir.mkdir();
+                if (!created) {
+                    System.err.println("Failed to create data directory");
+                    return;
+                }
             }
             
             File file = new File(DATA_FILE);
@@ -189,7 +200,7 @@ public class VendorSystem {
                 // Convert LinkedList to regular list for serialization
                 List<Vendor> vendorList = vendors.toList();
                 oos.writeObject(vendorList);
-                System.out.println("Saved " + vendorList.size() + " vendors to file");
+                System.out.println("Saved " + vendorList.size() + " vendors to file: " + file.getAbsolutePath());
             }
         } catch (IOException e) {
             System.err.println("Error saving vendors to file: " + e.getMessage());
