@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => ({
       '/api': {
         target: 'http://localhost:8080/wedding-vendor',
         changeOrigin: true,
-        rewrite: (path) => path
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
   },
@@ -28,4 +29,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Base path for production build, same as the context path in Tomcat
+  base: process.env.NODE_ENV === 'production' ? '/wedding-vendor/' : '/',
 }));
