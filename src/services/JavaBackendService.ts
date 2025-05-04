@@ -41,6 +41,35 @@ export interface Service {
   duration: string;
 }
 
+export interface Payment {
+  id: string;
+  bookingId: string;
+  userId: string;
+  vendorId: string;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  status: string;
+  transactionId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentRequest {
+  bookingId: string;
+  userId: string;
+  vendorId: string;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  cardDetails?: {
+    cardNumber: string;
+    cardholderName: string;
+    expiryDate: string;
+    cvv: string;
+  }
+}
+
 const API_BASE_URL = '/api';
 
 const mockVendors = [
@@ -555,6 +584,66 @@ class JavaBackendService {
         variant: 'destructive',
       });
       return false;
+    }
+  }
+
+  async processPayment(paymentRequest: PaymentRequest): Promise<Payment> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentRequest),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to process payment');
+      }
+      
+      toast({
+        title: 'Payment Successful',
+        description: 'Your payment has been processed successfully',
+      });
+      
+      return response.json();
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast({
+        title: 'Payment Failed',
+        description: error instanceof Error ? error.message : 'Failed to process payment',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  }
+
+  async getPaymentByBookingId(bookingId: string): Promise<Payment | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payments/booking/${bookingId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error(`Error fetching payment for booking ${bookingId}:`, error);
+      return null;
+    }
+  }
+
+  async getUserPayments(userId: string): Promise<Payment[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payments/user/${userId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user payments');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error(`Error fetching payments for user ${userId}:`, error);
+      return [];
     }
   }
 }

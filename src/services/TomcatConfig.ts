@@ -1,20 +1,20 @@
 
 /**
- * Configuration for the Tomcat server connection
+ * Configuration for the Java backend server connection
  */
-const TomcatConfig = {
-  // Base URL for the Tomcat server - change this to match your Tomcat deployment
+const BackendConfig = {
+  // Base URL for the Java server - change this to match your deployment
   baseUrl: process.env.NODE_ENV === 'production' 
-    ? '/wedding-vendor' // In production, use relative path for same-origin requests
-    : 'http://localhost:8080/wedding-vendor',
+    ? '/api' // In production, use relative path for same-origin requests
+    : 'http://localhost:8080/api',
   
   // API version
-  apiVersion: 'api',
+  apiVersion: '',
   
   // Complete API base URL constructed from baseUrl and apiVersion
   apiBaseUrl: process.env.NODE_ENV === 'production'
-    ? '/wedding-vendor/api'
-    : 'http://localhost:8080/wedding-vendor/api',
+    ? '/api'
+    : 'http://localhost:8080/api',
   
   // Timeout in milliseconds
   timeout: 30000,
@@ -32,4 +32,4 @@ const TomcatConfig = {
   enableDebugLogs: true
 };
 
-export default TomcatConfig;
+export default BackendConfig;

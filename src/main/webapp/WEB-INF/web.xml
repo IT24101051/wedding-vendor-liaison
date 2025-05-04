@@ -23,11 +23,12 @@
         <servlet-class>com.weddingvendor.backend.UserAuthServlet</servlet-class>
     </servlet>
     
-    <!-- Import servlet mappings from external file -->
-    <!-- Note: This is for organization only. In a real deployment,
-         servlet container will use the mappings defined directly in web.xml -->
+    <servlet>
+        <servlet-name>PaymentGatewayServlet</servlet-name>
+        <servlet-class>com.weddingvendor.backend.PaymentGatewayServlet</servlet-class>
+    </servlet>
     
-    <!-- Include servlet mappings directly -->
+    <!-- Servlet mappings -->
     <servlet-mapping>
         <servlet-name>VendorServlet</servlet-name>
         <url-pattern>/api/vendors/*</url-pattern>
@@ -41,6 +42,11 @@
     <servlet-mapping>
         <servlet-name>UserAuthServlet</servlet-name>
         <url-pattern>/api/auth/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>PaymentGatewayServlet</servlet-name>
+        <url-pattern>/api/payments/*</url-pattern>
     </servlet-mapping>
     
     <!-- CORS Filter for Cross-Domain Requests -->

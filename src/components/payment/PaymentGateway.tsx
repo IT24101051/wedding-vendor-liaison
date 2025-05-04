@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ReceiptGenerator from './ReceiptGenerator';
 import { useAuth } from '@/contexts/AuthContext';
+import JavaBackendService, { PaymentRequest } from '@/services/JavaBackendService';
 
 type PaymentGatewayProps = {
   amount: number;
@@ -103,23 +104,53 @@ const PaymentGateway = ({ amount, description, vendorName, serviceName, bookingI
 
   const finalAmount = amount - discountAmount;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Create payment request
+      const paymentRequest: PaymentRequest = {
+        bookingId: bookingId,
+        userId: user?.id || 'anonymous',
+        vendorId: bookingId.startsWith('vendor') ? bookingId : 'vendor1', // Extract from booking if possible
+        amount: finalAmount,
+        currency: 'USD',
+        paymentMethod: paymentMethod,
+        cardDetails: paymentMethod === 'card' ? {
+          cardNumber: cardNumber.replace(/\s/g, ''),
+          cardholderName: cardName,
+          expiryDate: expiryDate,
+          cvv: cvv
+        } : undefined
+      };
+      
+      // Process payment through the backend
+      const payment = await JavaBackendService.processPayment(paymentRequest);
+      
+      // Check payment status
+      if (payment.status === 'completed') {
+        setProcessing(false);
+        setCompleted(true);
+        
+        toast({
+          title: "Payment Successful",
+          description: `Your payment of $${finalAmount.toFixed(2)} has been processed.`,
+        });
+        
+        // Show receipt
+        setShowReceipt(true);
+      } else {
+        throw new Error('Payment failed. Please try again.');
+      }
+    } catch (error) {
       setProcessing(false);
-      setCompleted(true);
-      
       toast({
-        title: "Payment Successful",
-        description: `Your payment of $${finalAmount.toFixed(2)} has been processed.`,
+        title: "Payment Failed",
+        description: error instanceof Error ? error.message : 'An error occurred during payment processing',
+        variant: "destructive",
       });
-      
-      // Don't navigate yet, show the receipt first
-      setShowReceipt(true);
-    }, 2000);
+    }
   };
 
   const handleContinueAfterReceipt = () => {
