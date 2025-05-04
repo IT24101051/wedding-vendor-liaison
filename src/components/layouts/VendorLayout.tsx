@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,13 +35,23 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   const handleLogout = () => {
     console.log("Logging out vendor...");
+    // First execute logout to clear authentication state
     logout();
+    
     toast({
       title: "Logged out",
       description: "You have been successfully logged out of your vendor account"
     });
-    // Navigate after logout
-    navigate('/vendor/login');
+    
+    // Close mobile menu if open
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+    
+    // Make sure navigation happens after state updates
+    setTimeout(() => {
+      navigate('/vendor/login');
+    }, 100);
   };
 
   if (!user) {
