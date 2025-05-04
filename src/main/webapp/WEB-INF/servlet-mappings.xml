@@ -1,0 +1,21 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<servlet-mappings>
+    <!-- Vendor API Endpoints -->
+    <servlet-mapping>
+        <servlet-name>VendorServlet</servlet-name>
+        <url-pattern>/api/vendors/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- Vendor Booking Endpoints -->
+    <servlet-mapping>
+        <servlet-name>VendorBookingServlet</servlet-name>
+        <url-pattern>/api/vendor/bookings/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- User Authentication Endpoints -->
+    <servlet-mapping>
+        <servlet-name>UserAuthServlet</servlet-name>
+        <url-pattern>/api/auth/*</url-pattern>
+    </servlet-mapping>
+</servlet-mappings>

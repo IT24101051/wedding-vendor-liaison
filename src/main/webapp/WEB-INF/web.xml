@@ -7,29 +7,37 @@
     
     <display-name>Wedding Vendor Application</display-name>
     
-    <!-- Servlet Mappings -->
+    <!-- Servlet Definitions -->
     <servlet>
         <servlet-name>VendorServlet</servlet-name>
         <servlet-class>com.weddingvendor.backend.VendorServlet</servlet-class>
     </servlet>
-    <servlet-mapping>
-        <servlet-name>VendorServlet</servlet-name>
-        <url-pattern>/api/vendors/*</url-pattern>
-    </servlet-mapping>
     
     <servlet>
         <servlet-name>VendorBookingServlet</servlet-name>
         <servlet-class>com.weddingvendor.backend.VendorBookingServlet</servlet-class>
     </servlet>
-    <servlet-mapping>
-        <servlet-name>VendorBookingServlet</servlet-name>
-        <url-pattern>/api/vendor/bookings/*</url-pattern>
-    </servlet-mapping>
     
     <servlet>
         <servlet-name>UserAuthServlet</servlet-name>
         <servlet-class>com.weddingvendor.backend.UserAuthServlet</servlet-class>
     </servlet>
+    
+    <!-- Import servlet mappings from external file -->
+    <!-- Note: This is for organization only. In a real deployment,
+         servlet container will use the mappings defined directly in web.xml -->
+    
+    <!-- Include servlet mappings directly -->
+    <servlet-mapping>
+        <servlet-name>VendorServlet</servlet-name>
+        <url-pattern>/api/vendors/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>VendorBookingServlet</servlet-name>
+        <url-pattern>/api/vendor/bookings/*</url-pattern>
+    </servlet-mapping>
+    
     <servlet-mapping>
         <servlet-name>UserAuthServlet</servlet-name>
         <url-pattern>/api/auth/*</url-pattern>
