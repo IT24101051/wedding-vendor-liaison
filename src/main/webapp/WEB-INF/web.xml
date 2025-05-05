@@ -19,8 +19,8 @@
     </servlet>
     
     <servlet>
-        <servlet-name>UserAuthServlet</servlet-name>
-        <servlet-class>com.weddingvendor.backend.UserAuthServlet</servlet-class>
+        <servlet-name>AuthenticationServlet</servlet-name>
+        <servlet-class>com.weddingvendor.backend.AuthenticationServlet</servlet-class>
     </servlet>
     
     <servlet>
@@ -40,7 +40,7 @@
     </servlet-mapping>
     
     <servlet-mapping>
-        <servlet-name>UserAuthServlet</servlet-name>
+        <servlet-name>AuthenticationServlet</servlet-name>
         <url-pattern>/api/auth/*</url-pattern>
     </servlet-mapping>
     

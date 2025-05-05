@@ -70,6 +70,13 @@ export interface PaymentRequest {
   }
 }
 
+export interface UserRegisterData {
+  name: string;
+  email: string;
+  password: string;
+  role: 'user' | 'vendor' | 'admin';
+}
+
 const API_BASE_URL = '/api';
 
 const mockVendors = [
@@ -137,18 +144,31 @@ const mockVendors = [
 class JavaBackendService {
   async login(email: string, password: string, userType: 'user' | 'vendor' | 'admin') {
     try {
+      console.log(`Attempting login for ${email} as ${userType}`);
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, userType }),
+        body: JSON.stringify({ email, password, role: userType }),
+        credentials: 'include' // Include cookies for session management
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(data.message || 'Login failed');
       }
 
-      return response.json();
+      console.log('Login response:', data);
+      
+      if (data.success) {
+        toast({
+          title: 'Login Successful',
+          description: `Welcome back, ${data.data.name}!`,
+        });
+        return { success: true, user: data.data };
+      } else {
+        throw new Error(data.message || 'Login failed');
+      }
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -156,24 +176,37 @@ class JavaBackendService {
         description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
-      throw error;
+      return { success: false, error };
     }
   }
 
-  async register(userData: any, userType: 'user' | 'vendor') {
+  async register(userData: UserRegisterData) {
     try {
+      console.log('Registering user:', userData);
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...userData, userType }),
+        body: JSON.stringify(userData),
+        credentials: 'include' // Include cookies for session management
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        throw new Error(data.message || 'Registration failed');
       }
 
-      return response.json();
+      console.log('Registration response:', data);
+      
+      if (data.success) {
+        toast({
+          title: 'Registration Successful',
+          description: `Welcome, ${data.data.name}!`,
+        });
+        return { success: true, user: data.data };
+      } else {
+        throw new Error(data.message || 'Registration failed');
+      }
     } catch (error) {
       console.error('Registration error:', error);
       toast({
@@ -181,7 +214,63 @@ class JavaBackendService {
         description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
-      throw error;
+      return { success: false, error };
+    }
+  }
+  
+  async logout() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include' // Include cookies for session management
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Logout failed');
+      }
+
+      console.log('Logout response:', data);
+      
+      if (data.success) {
+        toast({
+          title: 'Logout Successful',
+          description: 'You have been logged out.',
+        });
+        return { success: true };
+      } else {
+        throw new Error(data.message || 'Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: 'Logout Failed',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+      return { success: false, error };
+    }
+  }
+  
+  async checkAuthStatus() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/status`, {
+        credentials: 'include' // Include cookies for session management
+      });
+
+      const data = await response.json();
+      
+      console.log('Auth status response:', data);
+      
+      if (data.success) {
+        return { authenticated: true, user: data.data };
+      } else {
+        return { authenticated: false };
+      }
+    } catch (error) {
+      console.error('Auth status check error:', error);
+      return { authenticated: false, error };
     }
   }
 

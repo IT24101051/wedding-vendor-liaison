@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { BookingProvider } from './BookingContext';
+import JavaBackendService from '@/services/JavaBackendService';
 
 // Define user types
 export type UserType = 'user' | 'vendor' | 'admin';
@@ -18,143 +19,117 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string, userType: UserType) => Promise<boolean>;
   logout: () => void;
-  register: (userData: { email: string, password: string, name: string, type: UserType, businessDetails?: any }) => Promise<boolean>;
+  register: (userData: { email: string, password: string, name: string, type: UserType }) => Promise<boolean>;
   isAuthenticated: (requiredType?: UserType) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const MOCK_USERS = {
-  user: { id: 'user1', name: 'Demo Client', email: 'client@example.com', password: 'password', type: 'user' as UserType },
-  vendor: { id: 'vendor1', name: 'Elegant Moments Photography', email: 'vendor@example.com', password: 'password', type: 'vendor' as UserType },
-  admin: { id: 'admin1', name: 'Admin User', email: 'admin@example.com', password: 'admin123', type: 'admin' as UserType }
-};
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Use useToast only inside the component body
   const { toast } = useToast();
 
   // Check for existing session on load
   useEffect(() => {
-    const storedUser = localStorage.getItem('wedding_app_user');
-    if (storedUser) {
+    const checkAuthStatus = async () => {
+      setLoading(true);
       try {
-        setUser(JSON.parse(storedUser));
+        const { authenticated, user: authUser } = await JavaBackendService.checkAuthStatus();
+        if (authenticated && authUser) {
+          // Convert Java backend role to frontend type
+          setUser({
+            id: authUser.id,
+            name: authUser.name,
+            email: authUser.email,
+            type: authUser.role as UserType
+          });
+        }
       } catch (e) {
-        localStorage.removeItem('wedding_app_user');
+        console.error("Error checking auth status:", e);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+    
+    checkAuthStatus();
   }, []);
 
   // Login function
   const login = async (email: string, password: string, userType: UserType): Promise<boolean> => {
     setLoading(true);
     
-    // Simulate API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let mockUser;
-        
-        switch (userType) {
-          case 'user':
-            if (email === MOCK_USERS.user.email && password === MOCK_USERS.user.password) {
-              mockUser = { ...MOCK_USERS.user };
-              delete (mockUser as any).password;
-            }
-            break;
-          case 'vendor':
-            if (email === MOCK_USERS.vendor.email && password === MOCK_USERS.vendor.password) {
-              mockUser = { ...MOCK_USERS.vendor };
-              delete (mockUser as any).password;
-            }
-            break;
-          case 'admin':
-            if (email === MOCK_USERS.admin.email && password === MOCK_USERS.admin.password) {
-              mockUser = { ...MOCK_USERS.admin };
-              delete (mockUser as any).password;
-            }
-            break;
-        }
-
-        setLoading(false);
-        
-        if (mockUser) {
-          setUser(mockUser);
-          localStorage.setItem('wedding_app_user', JSON.stringify(mockUser));
-          toast({
-            title: "Login successful",
-            description: `Welcome back, ${mockUser.name}!`,
-          });
-          resolve(true);
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Login failed",
-            description: "Invalid email or password",
-          });
-          resolve(false);
-        }
-      }, 1000);
-    });
+    try {
+      const { success, user: loggedInUser } = await JavaBackendService.login(email, password, userType);
+      
+      setLoading(false);
+      
+      if (success && loggedInUser) {
+        // Convert Java backend role to frontend type
+        setUser({
+          id: loggedInUser.id,
+          name: loggedInUser.name,
+          email: loggedInUser.email,
+          type: loggedInUser.role as UserType
+        });
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      setLoading(false);
+      return false;
+    }
   };
 
   // Registration function
-  const register = async (userData: { email: string, password: string, name: string, type: UserType, businessDetails?: any }): Promise<boolean> => {
+  const register = async (userData: { email: string, password: string, name: string, type: UserType }): Promise<boolean> => {
     setLoading(true);
     
-    // Simulate API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Check if user with the same email already exists
-        const existingEmails = [MOCK_USERS.user.email, MOCK_USERS.vendor.email, MOCK_USERS.admin.email];
-        const emailExists = existingEmails.includes(userData.email);
-        
-        if (emailExists) {
-          setLoading(false);
-          toast({
-            variant: "destructive",
-            title: "Registration failed",
-            description: "Email is already registered",
-          });
-          resolve(false);
-          return;
-        }
-        
-        // Create new user
-        const newUser = {
-          id: `${userData.type}${Date.now()}`,
-          name: userData.name,
-          email: userData.email,
-          type: userData.type,
-        };
-        
-        // Auto-login after registration
-        setUser(newUser);
-        localStorage.setItem('wedding_app_user', JSON.stringify(newUser));
-        
-        setLoading(false);
-        toast({
-          title: "Registration successful",
-          description: `Welcome, ${newUser.name}!`,
+    try {
+      const { success, user: registeredUser } = await JavaBackendService.register({
+        email: userData.email,
+        password: userData.password,
+        name: userData.name,
+        role: userData.type
+      });
+      
+      setLoading(false);
+      
+      if (success && registeredUser) {
+        // Convert Java backend role to frontend type
+        setUser({
+          id: registeredUser.id,
+          name: registeredUser.name,
+          email: registeredUser.email,
+          type: registeredUser.role as UserType
         });
-        resolve(true);
-      }, 1500);
-    });
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      setLoading(false);
+      return false;
+    }
   };
 
   // Logout function
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('wedding_app_user');
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
+  const logout = async () => {
+    try {
+      const { success } = await JavaBackendService.logout();
+      if (success) {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast({
+        variant: "destructive",
+        title: "Logout Error",
+        description: "There was a problem logging out. Please try again.",
+      });
+    }
   };
 
   // Check authentication status
