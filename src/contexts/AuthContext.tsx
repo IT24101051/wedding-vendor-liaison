@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { BookingProvider } from './BookingContext';
@@ -14,12 +13,27 @@ export interface User {
   type: UserType;
 }
 
+// Add businessDetails interface for vendor registration
+export interface BusinessDetails {
+  category?: string;
+  description?: string;
+  contactName?: string;
+  phone?: string;
+  location?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, userType: UserType) => Promise<boolean>;
   logout: () => void;
-  register: (userData: { email: string, password: string, name: string, type: UserType }) => Promise<boolean>;
+  register: (userData: { 
+    email: string, 
+    password: string, 
+    name: string, 
+    type: UserType,
+    businessDetails?: BusinessDetails 
+  }) => Promise<boolean>;
   isAuthenticated: (requiredType?: UserType) => boolean;
 }
 
@@ -84,16 +98,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Registration function
-  const register = async (userData: { email: string, password: string, name: string, type: UserType }): Promise<boolean> => {
+  const register = async (userData: { 
+    email: string, 
+    password: string, 
+    name: string, 
+    type: UserType,
+    businessDetails?: BusinessDetails 
+  }): Promise<boolean> => {
     setLoading(true);
     
     try {
-      const { success, user: registeredUser } = await JavaBackendService.register({
+      // Extract businessDetails from userData if it exists
+      const { businessDetails, ...basicUserData } = userData;
+      
+      // Create registration payload
+      const registrationData = {
         email: userData.email,
         password: userData.password,
         name: userData.name,
-        role: userData.type
-      });
+        role: userData.type,
+        // Include businessDetails if it exists
+        ...(businessDetails && { businessDetails })
+      };
+      
+      const { success, user: registeredUser } = await JavaBackendService.register(registrationData);
       
       setLoading(false);
       

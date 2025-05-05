@@ -75,6 +75,13 @@ export interface UserRegisterData {
   email: string;
   password: string;
   role: 'user' | 'vendor' | 'admin';
+  businessDetails?: {
+    category?: string;
+    description?: string;
+    contactName?: string;
+    phone?: string;
+    location?: string;
+  };
 }
 
 const API_BASE_URL = '/api';
