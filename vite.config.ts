@@ -8,14 +8,14 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 3000,
+    port: 8080,
     proxy: {
       // Proxy API requests to Spring Boot server during development
       '/api': {
         target: 'http://localhost:8080/wedding-vendor',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
   },
