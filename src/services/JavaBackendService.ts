@@ -159,7 +159,14 @@ class JavaBackendService {
         credentials: 'include' // Include cookies for session management
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        console.error('Response is not JSON:', await response.text());
+        throw new Error('Invalid response format from server');
+      }
       
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
@@ -197,7 +204,14 @@ class JavaBackendService {
         credentials: 'include' // Include cookies for session management
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        console.error('Response is not JSON:', await response.text());
+        throw new Error('Invalid response format from server');
+      }
       
       if (!response.ok) {
         throw new Error(data.message || 'Registration failed');
@@ -232,7 +246,14 @@ class JavaBackendService {
         credentials: 'include' // Include cookies for session management
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        console.error('Response is not JSON:', await response.text());
+        throw new Error('Invalid response format from server');
+      }
       
       if (!response.ok) {
         throw new Error(data.message || 'Logout failed');
@@ -266,11 +287,18 @@ class JavaBackendService {
         credentials: 'include' // Include cookies for session management
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        console.error('Response is not JSON:', await response.text());
+        return { authenticated: false, error: 'Invalid response format from server' };
+      }
       
       console.log('Auth status response:', data);
       
-      if (data.success) {
+      if (data.success && data.authenticated) {
         return { authenticated: true, user: data.data };
       } else {
         return { authenticated: false };

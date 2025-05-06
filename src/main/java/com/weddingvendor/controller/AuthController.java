@@ -24,8 +24,9 @@ public class AuthController {
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         // Check if email already exists
         if (userService.emailExists(user.getEmail())) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "Email already registered");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Email already registered");
             return ResponseEntity.badRequest().body(response);
         }
         
@@ -34,17 +35,24 @@ public class AuthController {
         // Don't return password in the response
         createdUser.setPassword(null);
         
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", createdUser);
+        response.put("message", "User registered successfully");
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("email");
         String password = loginRequest.get("password");
+        String role = loginRequest.get("role");
         
         if (email == null || password == null) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "Email and password are required");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Email and password are required");
             return ResponseEntity.badRequest().body(response);
         }
         
@@ -53,12 +61,21 @@ public class AuthController {
             
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
+                
+                // Check if role matches the user's role
+                if (role != null && !user.getRole().equals(role)) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("message", "Invalid credentials for this user type");
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+                }
+                
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);
                 
                 // Don't return password in the response
                 user.setPassword(null);
-                response.put("user", user);
+                response.put("data", user);
                 
                 // In a real application, you would generate a JWT token here
                 response.put("token", "demo-token-" + System.currentTimeMillis());
@@ -79,7 +96,9 @@ public class AuthController {
         // For demo purposes, we'll just return an unauthenticated response
         
         Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
         response.put("authenticated", false);
+        response.put("message", "No valid session");
         
         return ResponseEntity.ok(response);
     }

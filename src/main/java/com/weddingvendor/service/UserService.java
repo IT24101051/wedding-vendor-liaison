@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,12 @@ public class UserService {
     public User createUser(User user) {
         // Encode password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        
+        // Set creation timestamp
+        if (user.getCreatedAt() == null) {
+            user.setCreatedAt(LocalDateTime.now());
+        }
+        
         return userRepository.save(user);
     }
     
@@ -78,5 +85,35 @@ public class UserService {
     
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
+    }
+    
+    // Add dummy users for testing purposes
+    public void createDefaultUsers() {
+        if (!emailExists("client@example.com")) {
+            User clientUser = new User();
+            clientUser.setEmail("client@example.com");
+            clientUser.setPassword("password");
+            clientUser.setName("Demo Client");
+            clientUser.setRole("user");
+            createUser(clientUser);
+        }
+        
+        if (!emailExists("vendor@example.com")) {
+            User vendorUser = new User();
+            vendorUser.setEmail("vendor@example.com");
+            vendorUser.setPassword("password");
+            vendorUser.setName("Demo Vendor");
+            vendorUser.setRole("vendor");
+            createUser(vendorUser);
+        }
+        
+        if (!emailExists("admin@example.com")) {
+            User adminUser = new User();
+            adminUser.setEmail("admin@example.com");
+            adminUser.setPassword("admin123");
+            adminUser.setName("System Admin");
+            adminUser.setRole("admin");
+            createUser(adminUser);
+        }
     }
 }
