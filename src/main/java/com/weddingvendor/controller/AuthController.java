@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")  // Remove the /api prefix as it's already in context-path
 @CrossOrigin(origins = "*")
 public class AuthController {
     
@@ -57,18 +57,23 @@ public class AuthController {
         }
         
         if (userService.authenticateUser(email, password)) {
-            Optional<User> userOpt = userService.getUserByEmail(email);
+            Optional<User> userOpt;
             
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                
-                // Check if role matches the user's role
-                if (role != null && !user.getRole().equals(role)) {
+            // If role is specified, use it to find the user
+            if (role != null && !role.isEmpty()) {
+                userOpt = userService.getUserByEmailAndRole(email, role);
+                if (userOpt.isEmpty()) {
                     Map<String, Object> response = new HashMap<>();
                     response.put("success", false);
                     response.put("message", "Invalid credentials for this user type");
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
                 }
+            } else {
+                userOpt = userService.getUserByEmail(email);
+            }
+            
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
                 
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);

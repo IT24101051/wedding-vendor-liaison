@@ -32,6 +32,10 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
     
+    public Optional<User> getUserByEmailAndRole(String email, String role) {
+        return userRepository.findByEmailAndRole(email, role);
+    }
+    
     public User createUser(User user) {
         // Encode password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -96,6 +100,7 @@ public class UserService {
             clientUser.setName("Demo Client");
             clientUser.setRole("user");
             createUser(clientUser);
+            System.out.println("Created default client user: client@example.com / password");
         }
         
         if (!emailExists("vendor@example.com")) {
@@ -105,6 +110,7 @@ public class UserService {
             vendorUser.setName("Demo Vendor");
             vendorUser.setRole("vendor");
             createUser(vendorUser);
+            System.out.println("Created default vendor user: vendor@example.com / password");
         }
         
         if (!emailExists("admin@example.com")) {
@@ -114,6 +120,7 @@ public class UserService {
             adminUser.setName("System Admin");
             adminUser.setRole("admin");
             createUser(adminUser);
+            System.out.println("Created default admin user: admin@example.com / admin123");
         }
     }
 }

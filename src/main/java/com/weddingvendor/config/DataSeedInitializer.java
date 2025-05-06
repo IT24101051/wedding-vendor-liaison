@@ -14,6 +14,7 @@ public class DataSeedInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("Initializing default users...");
         // Create default users when the application starts
         userService.createDefaultUsers();
         System.out.println("Default users created successfully.");
