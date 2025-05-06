@@ -8,14 +8,14 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 3000,
     proxy: {
-      // Proxy API requests to Tomcat server during development
+      // Proxy API requests to Spring Boot server during development
       '/api': {
         target: 'http://localhost:8080/wedding-vendor',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },
@@ -29,6 +29,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Base path for production build, same as the context path in Tomcat
+  // Base path for production build, same as the context path in Spring Boot
   base: process.env.NODE_ENV === 'production' ? '/wedding-vendor/' : '/',
 }));
