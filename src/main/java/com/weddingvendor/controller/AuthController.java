@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/auth")  // Remove the /api prefix as it's already in context-path
+@RequestMapping("/api/auth")  // Restore the full path with /api prefix
 @CrossOrigin(origins = "*")
 public class AuthController {
     
