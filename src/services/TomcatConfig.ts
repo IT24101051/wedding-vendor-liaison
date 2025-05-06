@@ -5,8 +5,8 @@
 const BackendConfig = {
   // Base URL for the Java server - change this to match your deployment
   baseUrl: process.env.NODE_ENV === 'production' 
-    ? '/api' // In production, use relative path for same-origin requests
-    : 'http://localhost:8080/api',
+    ? '' // In production, use same-origin requests
+    : 'http://localhost:8080',
   
   // API version
   apiVersion: '',
