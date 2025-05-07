@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import ReceiptGenerator from './ReceiptGenerator';
 import { useAuth } from '@/contexts/AuthContext';
 import JavaBackendService, { PaymentRequest } from '@/services/JavaBackendService';
+import BackendConfig from '@/services/TomcatConfig';
 
 type PaymentGatewayProps = {
   amount: number;
@@ -125,11 +127,34 @@ const PaymentGateway = ({ amount, description, vendorName, serviceName, bookingI
         } : undefined
       };
       
-      // Process payment through the backend
-      const payment = await JavaBackendService.processPayment(paymentRequest);
+      console.log("Sending payment request:", paymentRequest);
+      
+      let payment;
+      // Try to process payment through backend
+      try {
+        // Process payment through the backend
+        payment = await JavaBackendService.processPayment(paymentRequest);
+        console.log("Payment response:", payment);
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        
+        // If backend is not available or returns error, use fallback
+        if (BackendConfig.useMockFallback) {
+          console.log("Using mock fallback for payment processing");
+          // Simulate successful payment
+          payment = {
+            id: `payment_${Date.now()}`,
+            status: 'completed',
+            transactionId: `txn_${Math.random().toString(36).substring(2, 15)}`,
+            createdAt: new Date().toISOString()
+          };
+        } else {
+          throw error; // Re-throw if no fallback
+        }
+      }
       
       // Check payment status
-      if (payment.status === 'completed') {
+      if (payment && payment.status === 'completed') {
         setProcessing(false);
         setCompleted(true);
         
