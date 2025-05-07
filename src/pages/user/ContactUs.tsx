@@ -30,9 +30,9 @@ const ContactUs = () => {
             <MapPin className="h-8 w-8 text-wedding-gold mb-4" />
             <h3 className="text-lg font-medium mb-2">Our Location</h3>
             <p className="text-gray-600">
-              123 Wedding Plaza<br />
-              Suite 456<br />
-              San Francisco, CA 94107
+              SLIIT Metro Campus<br />
+              New Kandy Road<br />
+              Malabe, Sri Lanka
             </p>
           </Card>
           
