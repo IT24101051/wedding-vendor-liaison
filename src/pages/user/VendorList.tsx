@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import UserLayout from "@/components/layouts/UserLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,12 +22,11 @@ const VendorList = () => {
   const [sortBy, setSortBy] = useState("rating");
   const { toast } = useToast();
 
-  // Fetch vendors from backend
+  // Fetch all vendors initially
   useEffect(() => {
     const fetchVendors = async () => {
       setLoading(true);
       try {
-        // Initially fetch vendors sorted by rating (default)
         const vendorsData = await JavaBackendService.getAllVendors();
         setVendors(vendorsData);
         setFilteredVendors(vendorsData);
@@ -47,99 +45,84 @@ const VendorList = () => {
     fetchVendors();
   }, [toast]);
 
-  // Apply filters and sorting
+  // Apply client-side filtering instead of making multiple API calls
   useEffect(() => {
-    const applyFilters = async () => {
-      setLoading(true);
-      try {
-        let result = [...vendors];
-        
-        // Apply category filter if selected
-        if (categoryFilter !== "all") {
-          result = await JavaBackendService.getVendorsByCategory(categoryFilter);
-        }
-        
-        // Apply location filter if selected
-        if (locationFilter !== "all") {
-          const locationResults = await JavaBackendService.getVendorsByLocation(locationFilter);
-          if (categoryFilter !== "all") {
-            // If category filter is also applied, we need to find the intersection
-            result = result.filter(vendor => 
-              locationResults.some(locVendor => locVendor.id === vendor.id)
-            );
-          } else {
-            result = locationResults;
-          }
-        }
-        
-        // Apply search query if present
-        if (searchQuery.trim()) {
-          const searchResults = await JavaBackendService.searchVendors(searchQuery);
-          if (categoryFilter !== "all" || locationFilter !== "all") {
-            // If other filters are applied, find intersection
-            result = result.filter(vendor => 
-              searchResults.some(searchVendor => searchVendor.id === vendor.id)
-            );
-          } else {
-            result = searchResults;
-          }
-        }
-
-        // Apply price filter
-        if (priceFilter !== "all") {
-          switch (priceFilter) {
-            case "budget":
-              result = result.filter(vendor => vendor.minPrice < 1000);
-              break;
-            case "mid":
-              result = result.filter(vendor => vendor.minPrice >= 1000 && vendor.minPrice < 3000);
-              break;
-            case "premium":
-              result = result.filter(vendor => vendor.minPrice >= 3000 && vendor.minPrice < 5000);
-              break;
-            case "luxury":
-              result = result.filter(vendor => vendor.minPrice >= 5000);
-              break;
-            default:
-              break;
-          }
-        }
-
-        // Apply sorting
-        switch (sortBy) {
-          case "priceAsc":
-            result = await JavaBackendService.getVendorsSortedByPrice(true);
+    if (vendors.length === 0) return;
+    
+    setLoading(true);
+    
+    try {
+      // Start with all vendors
+      let result = [...vendors];
+      
+      // Apply category filter
+      if (categoryFilter !== "all") {
+        result = result.filter(vendor => 
+          vendor.category.toLowerCase() === categoryFilter.toLowerCase()
+        );
+      }
+      
+      // Apply location filter
+      if (locationFilter !== "all") {
+        result = result.filter(vendor => 
+          vendor.location.includes(locationFilter)
+        );
+      }
+      
+      // Apply search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(vendor =>
+          vendor.name.toLowerCase().includes(query) || 
+          vendor.description.toLowerCase().includes(query)
+        );
+      }
+      
+      // Apply price filter
+      if (priceFilter !== "all") {
+        switch (priceFilter) {
+          case "budget":
+            result = result.filter(vendor => vendor.minPrice < 1000);
             break;
-          case "priceDesc":
-            result = await JavaBackendService.getVendorsSortedByPrice(false);
+          case "mid":
+            result = result.filter(vendor => vendor.minPrice >= 1000 && vendor.minPrice < 3000);
             break;
-          case "rating":
-            // Get sorted by rating from backend
-            const ratedVendors = await JavaBackendService.getAllVendors();
-            // Filter the sorted results based on current filters
-            result = ratedVendors.filter(vendor => 
-              result.some(filteredVendor => filteredVendor.id === vendor.id)
-            );
+          case "premium":
+            result = result.filter(vendor => vendor.minPrice >= 3000 && vendor.minPrice < 5000);
+            break;
+          case "luxury":
+            result = result.filter(vendor => vendor.minPrice >= 5000);
             break;
           default:
             break;
         }
-
-        setFilteredVendors(result);
-      } catch (error) {
-        console.error("Error applying filters:", error);
-        toast({
-          title: "Error",
-          description: "Failed to apply filters. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (vendors.length > 0) {
-      applyFilters();
+      
+      // Apply sorting
+      switch (sortBy) {
+        case "priceAsc":
+          result = [...result].sort((a, b) => a.minPrice - b.minPrice);
+          break;
+        case "priceDesc":
+          result = [...result].sort((a, b) => b.minPrice - a.minPrice);
+          break;
+        case "rating":
+          result = [...result].sort((a, b) => b.rating - a.rating);
+          break;
+        default:
+          break;
+      }
+      
+      setFilteredVendors(result);
+    } catch (error) {
+      console.error("Error applying filters:", error);
+      toast({
+        title: "Error",
+        description: "Failed to apply filters. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   }, [categoryFilter, locationFilter, priceFilter, searchQuery, sortBy, vendors, toast]);
 
