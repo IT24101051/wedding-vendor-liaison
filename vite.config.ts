@@ -8,7 +8,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 5173, // Use the default Vite port to avoid conflict with Spring Boot
+    port: 8080, // Changed from 5173 to 8080 as required
     proxy: {
       // Proxy API requests to Spring Boot server during development
       '/api': {
