@@ -14,7 +14,7 @@ cp -r dist/* src/main/resources/static/
 
 # Build the Spring Boot application
 echo "Building Spring Boot application..."
-./mvnw clean package -DskipTests
+./mvnw clean package
 
 # Run the application
 echo "Starting application..."

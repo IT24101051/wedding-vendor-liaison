@@ -1,9 +1,9 @@
 
 /**
- * Configuration for the Java backend server connection
+ * Configuration for the Spring Boot backend server connection
  */
 const BackendConfig = {
-  // Base URL for the Java server - change this to match your deployment
+  // Base URL for the Spring Boot server - change this to match your deployment
   baseUrl: process.env.NODE_ENV === 'production' 
     ? '' // In production, use same-origin requests
     : 'http://localhost:8080',

@@ -8,14 +8,14 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 5173, // Use the default Vite port to avoid conflict with Spring Boot
     proxy: {
       // Proxy API requests to Spring Boot server during development
       '/api': {
-        target: 'http://localhost:8080/wedding-vendor',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+        rewrite: (path) => path
       }
     }
   },
@@ -29,6 +29,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Base path for production build, same as the context path in Spring Boot
-  base: process.env.NODE_ENV === 'production' ? '/wedding-vendor/' : '/',
+  // Base path for production build
+  base: process.env.NODE_ENV === 'production' ? '/' : '/',
 }));

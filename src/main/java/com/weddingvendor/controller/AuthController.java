@@ -11,17 +11,22 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @RestController
-@RequestMapping("/api/auth")  // Restore the full path with /api prefix
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST})
 public class AuthController {
+    
+    private static final Logger logger = Logger.getLogger(AuthController.class.getName());
     
     @Autowired
     private UserService userService;
     
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
+        logger.info("Register request received for email: " + user.getEmail());
+        
         // Check if email already exists
         if (userService.emailExists(user.getEmail())) {
             Map<String, Object> response = new HashMap<>();
@@ -40,6 +45,7 @@ public class AuthController {
         response.put("data", createdUser);
         response.put("message", "User registered successfully");
         
+        logger.info("User registered successfully: " + user.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
@@ -48,6 +54,8 @@ public class AuthController {
         String email = loginRequest.get("email");
         String password = loginRequest.get("password");
         String role = loginRequest.get("role");
+        
+        logger.info("Login attempt for: " + email + " with role: " + role);
         
         if (email == null || password == null) {
             Map<String, Object> response = new HashMap<>();
@@ -63,6 +71,7 @@ public class AuthController {
             if (role != null && !role.isEmpty()) {
                 userOpt = userService.getUserByEmailAndRole(email, role);
                 if (userOpt.isEmpty()) {
+                    logger.warning("Invalid credentials for role: " + role);
                     Map<String, Object> response = new HashMap<>();
                     response.put("success", false);
                     response.put("message", "Invalid credentials for this user type");
@@ -83,12 +92,14 @@ public class AuthController {
                 response.put("data", user);
                 
                 // In a real application, you would generate a JWT token here
-                response.put("token", "demo-token-" + System.currentTimeMillis());
+                response.put("token", "spring-boot-token-" + System.currentTimeMillis());
                 
+                logger.info("Login successful for: " + email);
                 return ResponseEntity.ok(response);
             }
         }
         
+        logger.warning("Invalid credentials for: " + email);
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", "Invalid credentials");

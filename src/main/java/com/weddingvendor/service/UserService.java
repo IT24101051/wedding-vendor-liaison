@@ -10,9 +10,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Service
 public class UserService {
+    
+    private static final Logger logger = Logger.getLogger(UserService.class.getName());
     
     @Autowired
     private UserRepository userRepository;
@@ -29,10 +32,12 @@ public class UserService {
     }
     
     public Optional<User> getUserByEmail(String email) {
+        logger.info("Looking up user by email: " + email);
         return userRepository.findByEmail(email);
     }
     
     public Optional<User> getUserByEmailAndRole(String email, String role) {
+        logger.info("Looking up user by email: " + email + " and role: " + role);
         return userRepository.findByEmailAndRole(email, role);
     }
     
@@ -45,6 +50,7 @@ public class UserService {
             user.setCreatedAt(LocalDateTime.now());
         }
         
+        logger.info("Creating new user: " + user.getEmail() + " with role: " + user.getRole());
         return userRepository.save(user);
     }
     
@@ -62,6 +68,7 @@ public class UserService {
             
             // Don't allow role changes through this method
             
+            logger.info("Updating user: " + existingUser.getEmail());
             return userRepository.save(existingUser);
         }
         
@@ -71,24 +78,31 @@ public class UserService {
     public boolean deleteUser(String id) {
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
+            logger.info("Deleted user with id: " + id);
             return true;
         }
         return false;
     }
     
     public boolean authenticateUser(String email, String password) {
+        logger.info("Authenticating user: " + email);
         Optional<User> userOpt = userRepository.findByEmail(email);
         
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            return passwordEncoder.matches(password, user.getPassword());
+            boolean matches = passwordEncoder.matches(password, user.getPassword());
+            logger.info("Authentication " + (matches ? "successful" : "failed") + " for user: " + email);
+            return matches;
         }
         
+        logger.warning("User not found with email: " + email);
         return false;
     }
     
     public boolean emailExists(String email) {
-        return userRepository.existsByEmail(email);
+        boolean exists = userRepository.existsByEmail(email);
+        logger.info("Email exists check for " + email + ": " + exists);
+        return exists;
     }
     
     // Add dummy users for testing purposes
@@ -100,7 +114,7 @@ public class UserService {
             clientUser.setName("Demo Client");
             clientUser.setRole("user");
             createUser(clientUser);
-            System.out.println("Created default client user: client@example.com / password");
+            logger.info("Created default client user: client@example.com / password");
         }
         
         if (!emailExists("vendor@example.com")) {
@@ -110,7 +124,7 @@ public class UserService {
             vendorUser.setName("Demo Vendor");
             vendorUser.setRole("vendor");
             createUser(vendorUser);
-            System.out.println("Created default vendor user: vendor@example.com / password");
+            logger.info("Created default vendor user: vendor@example.com / password");
         }
         
         if (!emailExists("admin@example.com")) {
@@ -120,7 +134,7 @@ public class UserService {
             adminUser.setName("System Admin");
             adminUser.setRole("admin");
             createUser(adminUser);
-            System.out.println("Created default admin user: admin@example.com / admin123");
+            logger.info("Created default admin user: admin@example.com / admin123");
         }
     }
 }
